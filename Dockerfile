@@ -14,4 +14,5 @@ COPY . .
 EXPOSE 3000
 
 # Start the development server
-CMD ["npm", "start"]
+# CMD ["npm", "start"]
+CMD ["npm", "start", "--", "--disable-host-check"]

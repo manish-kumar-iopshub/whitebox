@@ -7,6 +7,8 @@ import DebugInfo from './DebugInfo';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock, faChartBar, faBolt, faHistory } from '@fortawesome/free-solid-svg-icons';
 
 const TargetDetail = ({ target, onBack }) => {
   const [status, setStatus] = useState(null);
@@ -59,7 +61,7 @@ const TargetDetail = ({ target, onBack }) => {
   if (loading) {
     return (
       <div className="text-center p-10">
-        <div className="text-2xl mb-2">⏳</div>
+        <FontAwesomeIcon icon={faClock} className="text-2xl mb-2 text-blue-600" />
         <p className="text-gray-600">Loading target data...</p>
       </div>
     );
@@ -102,14 +104,14 @@ const TargetDetail = ({ target, onBack }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card className="text-center shadow-sm border border-gray-200">
           <CardContent className="pt-6">
-            <div className="text-3xl mb-2">📊</div>
+            <FontAwesomeIcon icon={faChartBar} className="text-3xl mb-2 text-blue-600" />
             <div className="text-2xl font-bold text-blue-600">{uptime.toFixed(2)}%</div>
             <div className="text-sm text-gray-600">Uptime</div>
           </CardContent>
         </Card>
         <Card className="text-center shadow-sm border border-gray-200">
           <CardContent className="pt-6">
-            <div className="text-3xl mb-2">⚡</div>
+            <FontAwesomeIcon icon={faBolt} className="text-3xl mb-2 text-green-600" />
             <div className="text-2xl font-bold text-blue-600">
               {status?.responseTime ? `${(status.responseTime * 1000).toFixed(0)}ms` : 'N/A'}
             </div>
@@ -118,7 +120,7 @@ const TargetDetail = ({ target, onBack }) => {
         </Card>
         <Card className="text-center shadow-sm border border-gray-200">
           <CardContent className="pt-6">
-            <div className="text-3xl mb-2">🕒</div>
+            <FontAwesomeIcon icon={faHistory} className="text-3xl mb-2 text-orange-600" />
             <div className="text-2xl font-bold text-gray-700">
               {status?.lastCheck ? formatDate(status.lastCheck) : 'N/A'}
             </div>

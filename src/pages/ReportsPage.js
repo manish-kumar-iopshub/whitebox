@@ -2,6 +2,8 @@ import React from 'react';
 import TimeRangePicker from '../components/TimeRangePicker';
 import ReportGenerator from '../components/ReportGenerator';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileAlt } from '@fortawesome/free-solid-svg-icons';
 
 const ReportsPage = ({ 
   targetStatuses, 
@@ -12,7 +14,7 @@ const ReportsPage = ({
   return (
     <div className="p-6">
       <div className="flex items-center gap-4 mb-8">
-        <span className="text-2xl">📄</span>
+        <FontAwesomeIcon icon={faFileAlt} className="text-2xl text-purple-600" />
         <h1 className="m-0 text-2xl font-bold text-gray-900">Reports</h1>
       </div>
       <TimeRangePicker 

@@ -1,8 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import DomainGrouping from '../components/DomainGrouping';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock, faSearch, faFolder } from '@fortawesome/free-solid-svg-icons';
+import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { Clock, Search } from 'lucide-react';
+import DomainGrouping from '../components/DomainGrouping';
+import { findTargetGroup } from '../utils/domainUtils';
 
 const GroupsPage = ({ 
   targets, 
@@ -40,26 +44,29 @@ const GroupsPage = ({
   return (
     <div className="p-6">
       <div className="flex items-center gap-4 mb-8">
-        <span className="text-2xl">📁</span>
+        <FontAwesomeIcon icon={faFolder} className="text-2xl text-blue-600" />
         <h1 className="m-0 text-2xl font-bold text-gray-900">Domain Groups</h1>
       </div>
 
       {/* Data Period Note */}
       <div className="flex items-center gap-2 mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <Clock className="h-4 w-4 text-blue-600" />
+        <FontAwesomeIcon icon={faClock} className="h-4 w-4 text-blue-600" />
         <span className="text-sm text-blue-700">Showing uptime data for the last 2 days</span>
       </div>
 
       {/* Search Bar */}
       <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="relative">
+          <FontAwesomeIcon 
+            icon={faSearch} 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" 
+          />
           <Input
             type="text"
             placeholder="Search groups..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4"
+            className="pl-10"
           />
         </div>
         {searchQuery && domainGroups && (

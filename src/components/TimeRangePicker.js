@@ -5,9 +5,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
-import { Calendar, Clock, ChevronRight } from 'lucide-react';
-import { DatePicker } from './ui/date-picker';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendar, faClock, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { format } from 'date-fns';
+import { DatePicker } from './ui/date-picker';
 
 const TimeRangePicker = ({ 
   onTimeRangeChange, 
@@ -152,7 +155,7 @@ const TimeRangePicker = ({
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-gray-600" />
+            <FontAwesomeIcon icon={faCalendar} className="mr-2 h-4 w-4" />
             <CardTitle className="text-lg text-gray-900">Time Range</CardTitle>
           </div>
           {showTimezone && (
@@ -166,13 +169,13 @@ const TimeRangePicker = ({
         {/* Selected Range Display */}
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-600" />
+            <FontAwesomeIcon icon={faCalendar} className="mr-2 h-4 w-4" />
             <span className="text-sm font-medium text-gray-700">Selected Range:</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>{formatDateForDisplay(pendingStartDate)}</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>{formatDateForDisplay(pendingEndDate)}</span>
+            <span>{format(pendingStartDate, "PPP")}</span>
+            <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
+            <span>{format(pendingEndDate, "PPP")}</span>
             <Badge variant="secondary" className="ml-2">
               {getDurationText(pendingStartDate, pendingEndDate)}
             </Badge>

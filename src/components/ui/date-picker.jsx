@@ -1,6 +1,7 @@
 import * as React from "react"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendar } from '@fortawesome/free-solid-svg-icons';
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
 import { Calendar } from "./calendar"
@@ -17,7 +18,7 @@ const DatePicker = ({ date, onDateChange, placeholder = "Pick a date" }) => {
             !date && "text-muted-foreground"
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <FontAwesomeIcon icon={faCalendar} className="mr-2 h-4 w-4 text-blue-600" />
           {date ? format(date, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>

@@ -7,7 +7,8 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { AlertTriangle, Clock, Activity, FileText } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle, faClock, faBolt, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 
 const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const [downtimes, setDowntimes] = useState([]);
@@ -186,7 +187,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
     <Card className="mb-6 shadow-sm border border-gray-200">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-gray-600" />
+          <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-red-600" />
           <CardTitle className="text-gray-900">Downtime History for {isGroup ? `${targets.length} targets` : target}</CardTitle>
         </div>
       </CardHeader>
@@ -222,7 +223,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
 
         {loading && (
           <div className="text-center py-8">
-            <div className="text-2xl mb-2">⏳</div>
+            <FontAwesomeIcon icon={faClock} className="text-2xl mb-2 text-blue-600" />
             <p className="text-gray-600">{loadingProgress || 'Loading downtime data...'}</p>
           </div>
         )}
@@ -253,7 +254,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
 
             {filteredDowntimes.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <FontAwesomeIcon icon={faClock} className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>No downtime events found for the selected criteria.</p>
               </div>
             ) : (
@@ -300,7 +301,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
                   variant="default" 
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faFileAlt} className="h-4 w-4" />
                   Generate Report
                 </Button>
               </div>

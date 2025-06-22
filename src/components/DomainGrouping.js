@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   createCustomGroups, 
   saveCustomGroups, 
@@ -8,7 +8,10 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Search } from 'lucide-react';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faPlus, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
 
 const DomainGrouping = ({ 
   targets, 
@@ -23,6 +26,7 @@ const DomainGrouping = ({
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedDomains, setSelectedDomains] = useState([]);
   const [domainGroups, setDomainGroups] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const savedGroups = loadCustomGroups();
@@ -73,6 +77,18 @@ const DomainGrouping = ({
         group.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : customGroups;
+
+  const handleCreateGroup = () => {
+    setShowCustomForm(true);
+  };
+
+  const handleEditGroup = (groupName) => {
+    // Implementation for editing a group
+  };
+
+  const handleDeleteGroup = (groupName) => {
+    // Implementation for deleting a group
+  };
 
   return (
     <div>
@@ -127,9 +143,24 @@ const DomainGrouping = ({
               <Card key={group.name} className="bg-blue-50 border border-blue-200 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="truncate text-base font-semibold text-gray-900">{group.name}</CardTitle>
-                  <Button size="sm" variant="destructive" onClick={() => handleRemoveCustomGroup(group.name)}>
-                    Remove
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => handleEditGroup(group.name)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <FontAwesomeIcon icon={faEdit} className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteGroup(group.name)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-gray-600">{group.domains.length} domain{group.domains.length !== 1 ? 's' : ''}</div>
@@ -174,7 +205,7 @@ const DomainGrouping = ({
        filteredCustomGroups.length === 0 && 
        Object.keys(filteredGroups || {}).length === 0 && (
         <div className="text-center py-12">
-          <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <FontAwesomeIcon icon={faSearch} className="h-12 w-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500">No groups found matching "{searchQuery}"</p>
         </div>
       )}

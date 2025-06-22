@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ConnectionTest from '../components/ConnectionTest';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { testConnection } from '../services/prometheusApi';
 
 const SettingsPage = () => {
@@ -42,7 +44,7 @@ const SettingsPage = () => {
   return (
     <div className="p-6">
       <div className="flex items-center gap-4 mb-8">
-        <span className="text-2xl">⚙️</span>
+        <FontAwesomeIcon icon={faCog} className="text-2xl text-orange-600" />
         <h1 className="m-0 text-2xl font-bold text-gray-900">Settings</h1>
       </div>
       <Card className="mb-6 shadow-sm border border-gray-200">

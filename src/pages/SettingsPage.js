@@ -11,10 +11,15 @@ const SettingsPage = () => {
   const [lastChecked, setLastChecked] = useState(null);
 
   // Get version and environment from env variables
-  const appVersion = process.env.REACT_APP_VERSION || 'latest';
   const environment = process.env.REACT_APP_ENVIRONMENT || 'localhost';
-  const prometheusUrl = process.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090';
-
+  // const appVersion = process.env.REACT_APP_VERSION || 'latest';
+  const appVersion = window.env.REACT_APP_VERSION || 'latest';
+  // const prometheusUrl = process.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090';
+  const prometheusUrl = window.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090';
+  
+  console.log('prometheusUrl from window.env', prometheusUrl);
+  console.log('appVersion from windows.env', appVersion);
+  
   useEffect(() => {
     const checkConnectivity = async () => {
       try {

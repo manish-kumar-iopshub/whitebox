@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { formatDate } from '../utils/domainUtils';
 import { getDowntimePeriods, getGroupDowntimePeriods } from '../services/prometheusApi';
 
-const DowntimeTable = ({ target, timeRange, onTimeRangeChange, targets }) => {
+const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const [downtimes, setDowntimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [excludeShortDowntimes, setExcludeShortDowntimes] = useState(false);
+  const [debugChunks, setDebugChunks] = useState([]);
 
   // Use the timeRange prop instead of custom state
   const effectiveTimeRange = timeRange || (() => {
@@ -23,24 +24,42 @@ const DowntimeTable = ({ target, timeRange, onTimeRangeChange, targets }) => {
   // Fetch real downtime data from Prometheus
   useEffect(() => {
     const fetchDowntimes = async () => {
-      if (!target) return;
-      
+      if (!target && !(targets && targets.length > 0)) return;
       setLoading(true);
       setError(null);
       setLoadingProgress('Initializing...');
-      
+      const chunkInfo = [];
       try {
         let downtimePeriods;
+        
+        // Progress tracking callback
+        const handleProgress = (current, total, message, chunkParams) => {
+          setLoadingProgress(`${current}/${total} API calls done: ${message}`);
+          if (chunkParams) chunkInfo.push(chunkParams);
+        };
         
         // Check if this is a group (contains multiple targets)
         if (targets && targets.length > 0) {
           setLoadingProgress(`Fetching data for ${targets.length} targets...`);
-          // Fetch downtime for all targets in the group
-          downtimePeriods = await getGroupDowntimePeriods(targets, effectiveTimeRange.start, effectiveTimeRange.end);
+          downtimePeriods = await getGroupDowntimePeriods(targets, effectiveTimeRange.start, effectiveTimeRange.end, (current, total, message) => {
+            // For debug info, collect chunk params
+            handleProgress(current, total, message, {
+              targets,
+              start: effectiveTimeRange.start,
+              end: effectiveTimeRange.end,
+              message
+            });
+          });
         } else {
           setLoadingProgress('Fetching downtime data...');
-          // Fetch downtime for a single target
-          downtimePeriods = await getDowntimePeriods(target, effectiveTimeRange.start, effectiveTimeRange.end);
+          downtimePeriods = await getDowntimePeriods(target, effectiveTimeRange.start, effectiveTimeRange.end, (current, total, message) => {
+            handleProgress(current, total, message, {
+              target,
+              start: effectiveTimeRange.start,
+              end: effectiveTimeRange.end,
+              message
+            });
+          });
         }
         
         setLoadingProgress('Processing data...');
@@ -60,11 +79,23 @@ const DowntimeTable = ({ target, timeRange, onTimeRangeChange, targets }) => {
         
         setDowntimes(formattedDowntimes);
         setLoadingProgress('');
+        setDebugChunks(chunkInfo);
+        if (onDebugInfo) onDebugInfo(chunkInfo);
       } catch (err) {
         console.error('Error fetching downtime data:', err);
-        setError('Failed to load downtime data. Please check your Prometheus connection.');
-        setDowntimes([]);
+        
+        // Don't show error for timeout or connection issues, just show empty state
+        if (err.code === 'ECONNABORTED' || err.message.includes('timeout') || err.message.includes('cancelled')) {
+          console.warn('Request was cancelled or timed out, showing empty downtime data');
+          setError(null);
+          setDowntimes([]);
+        } else {
+          setError('Failed to load downtime data. Please check your Prometheus connection.');
+          setDowntimes([]);
+        }
         setLoadingProgress('');
+        setDebugChunks([]);
+        if (onDebugInfo) onDebugInfo([]);
       } finally {
         setLoading(false);
       }
@@ -117,7 +148,7 @@ const DowntimeTable = ({ target, timeRange, onTimeRangeChange, targets }) => {
         Downtime History for {target}
       </h3>
 
-      {/* Time Range Filter */}
+      {/* Filter Controls */}
       <div style={{
         display: 'flex',
         gap: '15px',
@@ -125,46 +156,6 @@ const DowntimeTable = ({ target, timeRange, onTimeRangeChange, targets }) => {
         flexWrap: 'wrap',
         alignItems: 'center'
       }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#2c3e50' }}>
-            Start Date
-          </label>
-          <input
-            type="datetime-local"
-            value={effectiveTimeRange.start.toISOString().slice(0, 16)}
-            onChange={(e) => onTimeRangeChange({
-              ...effectiveTimeRange,
-              start: new Date(e.target.value)
-            })}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
-        </div>
-        
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#2c3e50' }}>
-            End Date
-          </label>
-          <input
-            type="datetime-local"
-            value={effectiveTimeRange.end.toISOString().slice(0, 16)}
-            onChange={(e) => onTimeRangeChange({
-              ...effectiveTimeRange,
-              end: new Date(e.target.value)
-            })}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              fontSize: '14px'
-            }}
-          />
-        </div>
-
         <div>
           <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#2c3e50' }}>
             Filter Type

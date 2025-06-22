@@ -5,6 +5,7 @@ import TimeRangePicker from './TimeRangePicker';
 import UptimeChart from './UptimeChart';
 import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
+import DebugInfo from './DebugInfo';
 
 const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses, onBack }) => {
   const [targetStatuses, setTargetStatuses] = useState({});
@@ -19,6 +20,7 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
       end: now
     };
   });
+  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     const processData = async () => {
@@ -194,11 +196,12 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
         </button>
       </div>
 
-      {/* Time Range Picker */}
+      {/* Unified Time Range Picker */}
       <TimeRangePicker
         onTimeRangeChange={handleTimeRangeChange}
         initialStart={timeRange.start}
         initialEnd={timeRange.end}
+        timezone="Asia/Kolkata"
       />
 
       {/* Summary Cards */}
@@ -265,34 +268,21 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Charts and DowntimeTable use the same timeRange */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
         gap: '20px',
         marginBottom: '30px'
       }}>
-        <UptimeChart
-          target={groupName}
-          targets={targets}
-          timeRange={timeRange}
-          onTimeRangeChange={handleTimeRangeChange}
-        />
-        <ResponseTimeChart
-          target={groupName}
-          targets={targets}
-          timeRange={timeRange}
-          onTimeRangeChange={handleTimeRangeChange}
-        />
+        <UptimeChart targets={targets} timeRange={timeRange} />
+        <ResponseTimeChart targets={targets} timeRange={timeRange} />
       </div>
 
-      {/* Downtime Table */}
-      <DowntimeTable
-        target={groupName}
-        targets={targets}
-        timeRange={timeRange}
-        onTimeRangeChange={handleTimeRangeChange}
-      />
+      <DowntimeTable targets={targets} timeRange={timeRange} onDebugInfo={setDebugInfo} />
+
+      {/* Debug Info Collapsed Tab */}
+      <DebugInfo debugInfo={debugInfo} />
     </div>
   );
 };

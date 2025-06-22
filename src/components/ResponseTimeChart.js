@@ -20,13 +20,18 @@ const ResponseTimeChart = ({ target, timeRange, onTimeRangeChange, targets }) =>
       try {
         let chartData;
         
+        // Progress tracking callback
+        const handleProgress = (current, total, message) => {
+          setLoadingProgress(`${current}/${total} API calls done: ${message}`);
+        };
+        
         if (targets && targets.length > 0) {
           // Fetch data for multiple targets (group view)
           setLoadingProgress(`Fetching data for ${targets.length} targets...`);
-          chartData = await fetchResponseTimeData(targets, timeRange.start, timeRange.end);
+          chartData = await fetchResponseTimeData(targets, timeRange.start, timeRange.end, handleProgress);
         } else {
           // Fetch data for single target
-          chartData = await fetchResponseTimeData([target], timeRange.start, timeRange.end);
+          chartData = await fetchResponseTimeData([target], timeRange.start, timeRange.end, handleProgress);
         }
         
         setData(chartData);

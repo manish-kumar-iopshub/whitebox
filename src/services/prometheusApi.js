@@ -40,16 +40,59 @@ const formatTimeRange = (start, end) => {
   return { start: startTime, end: endTime };
 };
 
-// Helper function to calculate optimal step size for a time range
+// Helper function to create precise day-based chunks
+const createDayBasedChunks = (startTime, endTime) => {
+  const chunks = [];
+  const startDate = new Date(startTime * 1000);
+  const endDate = new Date(endTime * 1000);
+  
+  // If duration is less than 24 hours, return single chunk
+  const durationHours = (endTime - startTime) / 3600;
+  if (durationHours <= 24) {
+    return [{ start: startTime, end: endTime }];
+  }
+  
+  let currentStart = startTime;
+  
+  while (currentStart < endTime) {
+    // Calculate the end of the current day (00:00:00 of next day)
+    const currentDate = new Date(currentStart * 1000);
+    const nextDay = new Date(currentDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    nextDay.setHours(0, 0, 0, 0);
+    
+    const dayEnd = Math.floor(nextDay.getTime() / 1000);
+    const chunkEnd = Math.min(dayEnd, endTime);
+    
+    chunks.push({ start: currentStart, end: chunkEnd });
+    
+    // Move to next day
+    currentStart = chunkEnd;
+  }
+  
+  return chunks;
+};
+
+// Helper function to calculate optimal step size with consistency
 const calculateOptimalStep = (startTime, endTime, maxPoints = 10000) => {
   const duration = endTime - startTime;
   const optimalStep = Math.ceil(duration / maxPoints);
   
-  // Ensure minimum step of 1 minute and maximum of 1 hour
-  return Math.max(60, Math.min(3600, optimalStep));
+  // Use consistent step sizes: 1m, 5m, 15m, 1h, 6h, 1d
+  const stepSizes = [60, 300, 900, 3600, 21600, 86400];
+  
+  // Find the smallest step size that's >= optimalStep
+  for (const step of stepSizes) {
+    if (step >= optimalStep) {
+      return step;
+    }
+  }
+  
+  // If optimalStep is larger than any predefined step, use the largest
+  return stepSizes[stepSizes.length - 1];
 };
 
-// Helper function to chunk time ranges
+// Helper function to chunk time ranges (legacy - keeping for compatibility)
 const chunkTimeRange = (startTime, endTime, maxChunkDuration = 7 * 24 * 3600) => { // 7 days max per chunk
   const chunks = [];
   let currentStart = startTime;
@@ -195,83 +238,108 @@ export const getUptimePercentage = async (target, start, end) => {
   }
 };
 
-// Get downtime periods for a target with chunked fetching
-export const getDowntimePeriods = async (target, start, end) => {
+// Get downtime periods for a target with progress tracking
+export const getDowntimePeriods = async (target, start, end, onProgress = null) => {
   try {
     const { start: startTime, end: endTime } = formatTimeRange(start, end);
     
-    // Calculate optimal step size
-    const step = calculateOptimalStep(startTime, endTime);
+    console.log(`Fetching downtime for ${target} from ${new Date(startTime * 1000).toISOString()} to ${new Date(endTime * 1000).toISOString()}`);
     
-    // If time range is too large, chunk it
-    const maxChunkDuration = 7 * 24 * 3600; // 7 days
-    const totalDuration = endTime - startTime;
+    // Use a fixed 1-minute step for maximum accuracy and consistency
+    const step = 60; // 1 minute
+    
+    // Create day-based chunks
+    const chunks = createDayBasedChunks(startTime, endTime);
+    console.log(`Created ${chunks.length} day-based chunks`);
     
     let allDowntimePeriods = [];
     
-    if (totalDuration > maxChunkDuration) {
-      // Fetch data in chunks
-      const chunks = chunkTimeRange(startTime, endTime, maxChunkDuration);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const chunkStartDate = new Date(chunk.start * 1000);
+      const chunkEndDate = new Date(chunk.end * 1000);
       
-      for (const chunk of chunks) {
-        const chunkStep = calculateOptimalStep(chunk.start, chunk.end);
-        
+      console.log(`Processing chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toISOString()} to ${chunkEndDate.toISOString()}`);
+      
+      // Report progress
+      if (onProgress) {
+        onProgress(i + 1, chunks.length, `Fetching chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toLocaleDateString()} ${chunkStartDate.toLocaleTimeString()} - ${chunkEndDate.toLocaleTimeString()}`);
+      }
+      
+      try {
         const response = await prometheusApi.get('/api/v1/query_range', {
           params: {
             query: `probe_success{instance="${target}"}`,
             start: chunk.start,
             end: chunk.end,
-            step: chunkStep,
+            step: step,
           },
+          timeout: 60000, // 60 second timeout for accurate data
         });
 
-        const chunkDowntimes = processDowntimeData(response.data.data.result[0]?.values || [], chunk.start, chunk.end);
+        const chunkDowntimes = processDowntimeDataAccurate(response.data.data.result[0]?.values || [], chunk.start, chunk.end);
         allDowntimePeriods = allDowntimePeriods.concat(chunkDowntimes);
+        
+        console.log(`Chunk ${i + 1} completed, found ${chunkDowntimes.length} downtime periods`);
+      } catch (chunkError) {
+        console.error(`Failed to fetch chunk ${i + 1}:`, chunkError);
+        // Don't continue if a chunk fails - we need complete data for consistency
+        throw chunkError;
       }
-    } else {
-      // Single request for smaller time ranges
-      const response = await prometheusApi.get('/api/v1/query_range', {
-        params: {
-          query: `probe_success{instance="${target}"}`,
-          start: startTime,
-          end: endTime,
-          step: step,
-        },
-      });
-
-      allDowntimePeriods = processDowntimeData(response.data.data.result[0]?.values || [], startTime, endTime);
     }
 
-    return allDowntimePeriods;
+    console.log(`Total downtime periods found: ${allDowntimePeriods.length}`);
+    
+    // Ensure no duplicates and consistent ordering
+    const uniqueDowntimes = removeDuplicateDowntimes(allDowntimePeriods);
+    console.log(`After deduplication: ${uniqueDowntimes.length} downtime periods`);
+    
+    // Report completion
+    if (onProgress) {
+      onProgress(chunks.length, chunks.length, `Completed: Found ${uniqueDowntimes.length} downtime periods`);
+    }
+    
+    return uniqueDowntimes.sort((a, b) => a.start.getTime() - b.start.getTime());
   } catch (error) {
     console.error('Error fetching downtime periods:', error);
-    throw error;
+    throw error; // Re-throw to let the UI handle it properly
   }
 };
 
-// Helper function to process downtime data from Prometheus response
-const processDowntimeData = (values, startTime, endTime) => {
+// More accurate downtime data processing
+const processDowntimeDataAccurate = (values, startTime, endTime) => {
   const downtimePeriods = [];
   
   if (values.length === 0) {
     return downtimePeriods;
   }
 
-  let currentDowntimeStart = null;
+  // Ensure data is sorted by timestamp
+  const sortedValues = values.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
   
-  for (let i = 0; i < values.length; i++) {
-    const [timestamp, value] = values[i];
+  let currentDowntimeStart = null;
+  let lastTimestamp = null;
+  let lastValue = null;
+  
+  for (let i = 0; i < sortedValues.length; i++) {
+    const [timestamp, value] = sortedValues[i];
+    const timestampInt = parseInt(timestamp);
     const isDown = value === '0';
+    
+    // Skip if this is the same timestamp as the last one (shouldn't happen with 1-minute step)
+    if (lastTimestamp === timestampInt) {
+      continue;
+    }
     
     if (isDown && currentDowntimeStart === null) {
       // Start of a new downtime period
-      currentDowntimeStart = parseInt(timestamp);
+      currentDowntimeStart = timestampInt;
     } else if (!isDown && currentDowntimeStart !== null) {
-      // End of a downtime period
-      const downtimeEnd = parseInt(timestamp);
+      // End of a downtime period - service came back up
+      const downtimeEnd = timestampInt;
       const duration = (downtimeEnd - currentDowntimeStart) / 60; // Duration in minutes
       
-      if (duration > 0) { // Only add if duration is positive
+      if (duration > 0) {
         downtimePeriods.push({
           start: new Date(currentDowntimeStart * 1000),
           end: new Date(downtimeEnd * 1000),
@@ -280,11 +348,14 @@ const processDowntimeData = (values, startTime, endTime) => {
       }
       currentDowntimeStart = null;
     }
+    
+    lastTimestamp = timestampInt;
+    lastValue = value;
   }
   
   // Handle case where downtime extends to the end of the time range
   if (currentDowntimeStart !== null) {
-    const duration = (endTime - currentDowntimeStart) / 60; // Duration in minutes
+    const duration = (endTime - currentDowntimeStart) / 60;
     
     if (duration > 0) {
       downtimePeriods.push({
@@ -296,6 +367,19 @@ const processDowntimeData = (values, startTime, endTime) => {
   }
 
   return downtimePeriods;
+};
+
+// Remove duplicate downtime periods
+const removeDuplicateDowntimes = (downtimes) => {
+  const seen = new Set();
+  return downtimes.filter(downtime => {
+    const key = `${downtime.start.getTime()}-${downtime.end.getTime()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 };
 
 // Get response time statistics
@@ -335,27 +419,35 @@ export const getResponseTimeStats = async (target, start, end) => {
   }
 };
 
-// Get downtime periods for multiple targets (group) with chunked fetching
-export const getGroupDowntimePeriods = async (targets, start, end) => {
+// Get downtime periods for multiple targets (group) with progress tracking
+export const getGroupDowntimePeriods = async (targets, start, end, onProgress = null) => {
   try {
     const { start: startTime, end: endTime } = formatTimeRange(start, end);
     
-    // Calculate optimal step size
-    const step = calculateOptimalStep(startTime, endTime);
+    console.log(`Fetching group downtime for ${targets.length} targets from ${new Date(startTime * 1000).toISOString()} to ${new Date(endTime * 1000).toISOString()}`);
     
-    // If time range is too large, chunk it
-    const maxChunkDuration = 7 * 24 * 3600; // 7 days
-    const totalDuration = endTime - startTime;
+    // Use a fixed 1-minute step for maximum accuracy and consistency
+    const step = 60; // 1 minute
+    
+    // Create day-based chunks
+    const chunks = createDayBasedChunks(startTime, endTime);
+    console.log(`Created ${chunks.length} day-based chunks for group`);
     
     let allDowntimePeriods = [];
     
-    if (totalDuration > maxChunkDuration) {
-      // Fetch data in chunks
-      const chunks = chunkTimeRange(startTime, endTime, maxChunkDuration);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const chunkStartDate = new Date(chunk.start * 1000);
+      const chunkEndDate = new Date(chunk.end * 1000);
       
-      for (const chunk of chunks) {
-        const chunkStep = calculateOptimalStep(chunk.start, chunk.end);
-        
+      console.log(`Processing group chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toISOString()} to ${chunkEndDate.toISOString()}`);
+      
+      // Report progress
+      if (onProgress) {
+        onProgress(i + 1, chunks.length, `Fetching group chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toLocaleDateString()} ${chunkStartDate.toLocaleTimeString()} - ${chunkEndDate.toLocaleTimeString()}`);
+      }
+      
+      try {
         // Get all probe_success data for all targets in the group
         const targetQueries = targets.map(target => `probe_success{instance="${target}"}`).join(' or ');
         const response = await prometheusApi.get('/api/v1/query_range', {
@@ -363,38 +455,43 @@ export const getGroupDowntimePeriods = async (targets, start, end) => {
             query: targetQueries,
             start: chunk.start,
             end: chunk.end,
-            step: chunkStep,
+            step: step,
           },
+          timeout: 90000, // 90 second timeout for group queries
         });
 
-        const chunkDowntimes = processGroupDowntimeData(response.data.data.result, chunk.start, chunk.end);
+        const chunkDowntimes = processGroupDowntimeDataAccurate(response.data.data.result, chunk.start, chunk.end, targets);
         allDowntimePeriods = allDowntimePeriods.concat(chunkDowntimes);
+        
+        console.log(`Group chunk ${i + 1} completed, found ${chunkDowntimes.length} downtime periods`);
+      } catch (chunkError) {
+        console.error(`Failed to fetch group chunk ${i + 1}:`, chunkError);
+        // Don't continue if a chunk fails - we need complete data for consistency
+        throw chunkError;
       }
-    } else {
-      // Single request for smaller time ranges
-      const targetQueries = targets.map(target => `probe_success{instance="${target}"}`).join(' or ');
-      const response = await prometheusApi.get('/api/v1/query_range', {
-        params: {
-          query: targetQueries,
-          start: startTime,
-          end: endTime,
-          step: step,
-        },
-      });
-
-      allDowntimePeriods = processGroupDowntimeData(response.data.data.result, startTime, endTime);
     }
 
+    console.log(`Total group downtime periods found: ${allDowntimePeriods.length}`);
+    
+    // Ensure no duplicates and consistent ordering
+    const uniqueDowntimes = removeDuplicateGroupDowntimes(allDowntimePeriods);
+    console.log(`After deduplication: ${uniqueDowntimes.length} group downtime periods`);
+    
+    // Report completion
+    if (onProgress) {
+      onProgress(chunks.length, chunks.length, `Completed: Found ${uniqueDowntimes.length} group downtime periods`);
+    }
+    
     // Sort by start time (most recent first)
-    return allDowntimePeriods.sort((a, b) => b.start - a.start);
+    return uniqueDowntimes.sort((a, b) => b.start.getTime() - a.start.getTime());
   } catch (error) {
     console.error('Error fetching group downtime periods:', error);
-    throw error;
+    throw error; // Re-throw to let the UI handle it properly
   }
 };
 
-// Helper function to process group downtime data
-const processGroupDowntimeData = (results, startTime, endTime) => {
+// More accurate group downtime data processing
+const processGroupDowntimeDataAccurate = (results, startTime, endTime, targets) => {
   const downtimePeriods = [];
   
   // Process each target's data
@@ -405,17 +502,25 @@ const processGroupDowntimeData = (results, startTime, endTime) => {
     if (values.length === 0) return;
 
     let currentDowntimeStart = null;
+    let lastTimestamp = null;
+    let lastValue = null;
     
     for (let i = 0; i < values.length; i++) {
       const [timestamp, value] = values[i];
+      const timestampInt = parseInt(timestamp);
       const isDown = value === '0';
+      
+      // Skip if this is the same timestamp as the last one
+      if (lastTimestamp === timestampInt) {
+        continue;
+      }
       
       if (isDown && currentDowntimeStart === null) {
         // Start of a new downtime period
-        currentDowntimeStart = parseInt(timestamp);
+        currentDowntimeStart = timestampInt;
       } else if (!isDown && currentDowntimeStart !== null) {
-        // End of a downtime period
-        const downtimeEnd = parseInt(timestamp);
+        // End of a downtime period - service came back up
+        const downtimeEnd = timestampInt;
         const duration = (downtimeEnd - currentDowntimeStart) / 60; // Duration in minutes
         
         if (duration > 0) {
@@ -428,6 +533,9 @@ const processGroupDowntimeData = (results, startTime, endTime) => {
         }
         currentDowntimeStart = null;
       }
+      
+      lastTimestamp = timestampInt;
+      lastValue = value;
     }
     
     // Handle case where downtime extends to the end of the time range
@@ -446,6 +554,19 @@ const processGroupDowntimeData = (results, startTime, endTime) => {
   });
 
   return downtimePeriods;
+};
+
+// Remove duplicate group downtime periods
+const removeDuplicateGroupDowntimes = (downtimes) => {
+  const seen = new Set();
+  return downtimes.filter(downtime => {
+    const key = `${downtime.start.getTime()}-${downtime.end.getTime()}-${downtime.target}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 };
 
 // Get target status
@@ -522,30 +643,38 @@ export const getTargetUptime = async (target, startTime, endTime) => {
   }
 };
 
-// Fetch chunked data for charts
-const fetchChunkedData = async (targets, startTime, endTime, metric) => {
-  const chunkSize = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-  const chunks = [];
+// Fetch chunked data for charts with progress tracking
+const fetchChunkedData = async (targets, startTime, endTime, metric, onProgress = null) => {
+  // Create day-based chunks
+  const chunks = createDayBasedChunks(
+    Math.floor(startTime.getTime() / 1000), 
+    Math.floor(endTime.getTime() / 1000)
+  );
   
-  for (let start = startTime.getTime(); start < endTime.getTime(); start += chunkSize) {
-    const chunkEnd = Math.min(start + chunkSize, endTime.getTime());
-    chunks.push({
-      start: new Date(start),
-      end: new Date(chunkEnd)
-    });
-  }
-
+  console.log(`Created ${chunks.length} day-based chunks for chart data`);
+  
   const allData = [];
   
-  for (const chunk of chunks) {
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const chunkStartDate = new Date(chunk.start * 1000);
+    const chunkEndDate = new Date(chunk.end * 1000);
+    
+    console.log(`Processing chart chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toISOString()} to ${chunkEndDate.toISOString()}`);
+    
+    // Report progress
+    if (onProgress) {
+      onProgress(i + 1, chunks.length, `Fetching chart chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toLocaleDateString()} ${chunkStartDate.toLocaleTimeString()} - ${chunkEndDate.toLocaleTimeString()}`);
+    }
+    
     try {
-      const step = Math.max(60, Math.floor((chunk.end.getTime() - chunk.start.getTime()) / 1000 / 1000)); // Max 1000 points
+      const step = Math.max(60, Math.floor((chunk.end - chunk.start) / 1000)); // Max 1000 points
       
       const response = await prometheusApi.get('/api/v1/query_range', {
         params: {
           query: `avg_over_time(${metric}{instance=~"${targets.join('|')}"}[1m])`,
-          start: Math.floor(chunk.start.getTime() / 1000),
-          end: Math.floor(chunk.end.getTime() / 1000),
+          start: chunk.start,
+          end: chunk.end,
           step: `${step}s`
         }
       });
@@ -558,17 +687,22 @@ const fetchChunkedData = async (targets, startTime, endTime, metric) => {
         })));
       }
     } catch (error) {
-      console.error(`Error fetching chunk data:`, error);
+      console.error(`Error fetching chart chunk ${i + 1}:`, error);
     }
+  }
+
+  // Report completion
+  if (onProgress) {
+    onProgress(chunks.length, chunks.length, `Completed: Fetched ${allData.length} data points`);
   }
 
   return allData.sort((a, b) => a.timestamp - b.timestamp);
 };
 
-// Fetch uptime data for charts
-export const fetchUptimeData = async (targets, startTime, endTime) => {
+// Fetch uptime data for charts with progress tracking
+export const fetchUptimeData = async (targets, startTime, endTime, onProgress = null) => {
   try {
-    const data = await fetchChunkedData(targets, startTime, endTime, 'probe_success');
+    const data = await fetchChunkedData(targets, startTime, endTime, 'probe_success', onProgress);
     
     // Transform data for chart display
     const chartData = data.map(point => ({
@@ -584,10 +718,10 @@ export const fetchUptimeData = async (targets, startTime, endTime) => {
   }
 };
 
-// Fetch response time data for charts
-export const fetchResponseTimeData = async (targets, startTime, endTime) => {
+// Fetch response time data for charts with progress tracking
+export const fetchResponseTimeData = async (targets, startTime, endTime, onProgress = null) => {
   try {
-    const data = await fetchChunkedData(targets, startTime, endTime, 'probe_duration_seconds');
+    const data = await fetchChunkedData(targets, startTime, endTime, 'probe_duration_seconds', onProgress);
     
     // Transform data for chart display
     const chartData = data.map(point => ({

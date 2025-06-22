@@ -11,26 +11,31 @@ const TimeRangePicker = ({
   const [startDate, setStartDate] = useState(initialStart || new Date(Date.now() - 24 * 60 * 60 * 1000));
   const [endDate, setEndDate] = useState(initialEnd || new Date());
   const [selectedPreset, setSelectedPreset] = useState('');
+  const [pendingStartDate, setPendingStartDate] = useState(startDate);
+  const [pendingEndDate, setPendingEndDate] = useState(endDate);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (initialStart && initialEnd) {
       setStartDate(initialStart);
       setEndDate(initialEnd);
+      setPendingStartDate(initialStart);
+      setPendingEndDate(initialEnd);
     }
   }, [initialStart, initialEnd]);
 
   const handleStartDateChange = (dateString) => {
     const newStartDate = parseDateFromInput(dateString);
-    setStartDate(newStartDate);
+    setPendingStartDate(newStartDate);
     setSelectedPreset(''); // Clear preset when manually selecting
-    onTimeRangeChange(newStartDate, endDate);
+    setHasChanges(true);
   };
 
   const handleEndDateChange = (dateString) => {
     const newEndDate = parseDateFromInput(dateString);
-    setEndDate(newEndDate);
+    setPendingEndDate(newEndDate);
     setSelectedPreset(''); // Clear preset when manually selecting
-    onTimeRangeChange(startDate, newEndDate);
+    setHasChanges(true);
   };
 
   const handlePresetClick = (preset) => {
@@ -39,8 +44,24 @@ const TimeRangePicker = ({
     
     setStartDate(start);
     setEndDate(now);
+    setPendingStartDate(start);
+    setPendingEndDate(now);
     setSelectedPreset(preset.value);
+    setHasChanges(false);
     onTimeRangeChange(start, now);
+  };
+
+  const handleApplyChanges = () => {
+    setStartDate(pendingStartDate);
+    setEndDate(pendingEndDate);
+    setHasChanges(false);
+    onTimeRangeChange(pendingStartDate, pendingEndDate);
+  };
+
+  const handleCancelChanges = () => {
+    setPendingStartDate(startDate);
+    setPendingEndDate(endDate);
+    setHasChanges(false);
   };
 
   const getCurrentTimezone = () => {
@@ -137,11 +158,11 @@ const TimeRangePicker = ({
           </label>
           <input
             type="datetime-local"
-            value={formatDateForInput(startDate)}
+            value={formatDateForInput(pendingStartDate)}
             onChange={(e) => handleStartDateChange(e.target.value)}
             style={{
               padding: '10px 12px',
-              border: '1px solid #ddd',
+              border: hasChanges ? '2px solid #3498db' : '1px solid #ddd',
               borderRadius: '6px',
               fontSize: '14px',
               minWidth: '200px'
@@ -161,11 +182,11 @@ const TimeRangePicker = ({
           </label>
           <input
             type="datetime-local"
-            value={formatDateForInput(endDate)}
+            value={formatDateForInput(pendingEndDate)}
             onChange={(e) => handleEndDateChange(e.target.value)}
             style={{
               padding: '10px 12px',
-              border: '1px solid #ddd',
+              border: hasChanges ? '2px solid #3498db' : '1px solid #ddd',
               borderRadius: '6px',
               fontSize: '14px',
               minWidth: '200px'
@@ -182,11 +203,53 @@ const TimeRangePicker = ({
           border: '1px solid #e9ecef',
           minWidth: '150px'
         }}>
-          <div style={{ fontWeight: '500', marginBottom: '4px' }}>Selected Range:</div>
-          <div>{formatDateForInput(startDate)}</div>
+          <div style={{ fontWeight: '500', marginBottom: '4px' }}>
+            {hasChanges ? 'Pending Range:' : 'Current Range:'}
+          </div>
+          <div>{formatDateForInput(pendingStartDate)}</div>
           <div>to</div>
-          <div>{formatDateForInput(endDate)}</div>
+          <div>{formatDateForInput(pendingEndDate)}</div>
         </div>
+
+        {/* Confirmation Buttons */}
+        {hasChanges && (
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'flex-end'
+          }}>
+            <button
+              onClick={handleApplyChanges}
+              style={{
+                background: '#27ae60',
+                color: 'white',
+                border: 'none',
+                padding: '10px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              Apply Changes
+            </button>
+            <button
+              onClick={handleCancelChanges}
+              style={{
+                background: '#95a5a6',
+                color: 'white',
+                border: 'none',
+                padding: '10px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import UptimeChart from './UptimeChart';
 import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
 import UptimeDonut from './UptimeDonut';
+import DebugInfo from './DebugInfo';
 
 const TargetDetail = ({ target, onBack }) => {
   const [status, setStatus] = useState(null);
@@ -20,6 +21,7 @@ const TargetDetail = ({ target, onBack }) => {
       end: now
     };
   });
+  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,11 +127,12 @@ const TargetDetail = ({ target, onBack }) => {
         </div>
       </div>
 
-      {/* Time Range Picker */}
+      {/* Unified Time Range Picker */}
       <TimeRangePicker
         onTimeRangeChange={handleTimeRangeChange}
         initialStart={timeRange.start}
         initialEnd={timeRange.end}
+        timezone="Asia/Kolkata"
       />
 
       {/* Summary Cards */}
@@ -203,16 +206,8 @@ const TargetDetail = ({ target, onBack }) => {
         gap: '20px',
         marginBottom: '30px'
       }}>
-        <UptimeChart
-          target={target}
-          timeRange={timeRange}
-          onTimeRangeChange={handleTimeRangeChange}
-        />
-        <ResponseTimeChart
-          target={target}
-          timeRange={timeRange}
-          onTimeRangeChange={handleTimeRangeChange}
-        />
+        <UptimeChart target={target} timeRange={timeRange} />
+        <ResponseTimeChart target={target} timeRange={timeRange} />
       </div>
 
       {/* Uptime Donut Chart */}
@@ -228,11 +223,10 @@ const TargetDetail = ({ target, onBack }) => {
       </div>
 
       {/* Downtime Table */}
-      <DowntimeTable
-        target={target}
-        timeRange={timeRange}
-        onTimeRangeChange={handleTimeRangeChange}
-      />
+      <DowntimeTable target={target} timeRange={timeRange} onDebugInfo={setDebugInfo} />
+
+      {/* Debug Info Collapsed Tab */}
+      <DebugInfo debugInfo={debugInfo} />
     </div>
   );
 };

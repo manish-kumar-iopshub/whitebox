@@ -234,8 +234,6 @@ const DomainGrouping = ({
             {Object.entries(domainGroups).map(([groupName, domains]) => {
               const groupTargets = targetStatuses.filter(t => domains.includes(t.target));
               const groupUptime = calculateGroupUptime(groupTargets.map(t => t.uptime || 0));
-              const upTargets = groupTargets.filter(t => t.success).length;
-              const downTargets = groupTargets.length - upTargets;
               
               return (
                 <div 
@@ -296,23 +294,21 @@ const DomainGrouping = ({
                         Uptime
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#27ae60' }}>
-                        {upTargets} up
-                      </div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#e74c3c' }}>
-                        {downTargets} down
-                      </div>
-                    </div>
                   </div>
                   
                   <div style={{
-                    fontSize: '12px',
-                    color: '#7f8c8d',
+                    fontSize: '14px',
+                    color: '#3498db',
                     borderTop: '1px solid #e1e8ed',
-                    paddingTop: '10px'
+                    paddingTop: '12px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
                   }}>
-                    Click to view details →
+                    <span>View Details</span>
+                    <span style={{ fontSize: '16px' }}>→</span>
                   </div>
                 </div>
               );

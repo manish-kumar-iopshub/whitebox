@@ -1,18 +1,26 @@
-FROM node:18-alpine
+# Multi-stage build for React application
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-RUN npm install
 
-# Copy source
+RUN npm ci --only=production
+
 COPY . .
 
-# Expose React dev server port
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine AS production
+
+# Copy built application
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy custom nginx config that listens on port 3000
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 3000
 EXPOSE 3000
 
-# Start the development server
-# CMD ["npm", "start"]
-CMD ["npm", "start", "--", "--disable-host-check"]
+CMD ["nginx", "-g", "daemon off;"]

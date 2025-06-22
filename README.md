@@ -118,7 +118,7 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
    Create a `.env` file in the root directory to customize application settings:
    ```bash
    # Prometheus Configuration
-   REACT_APP_PROMETHEUS_URL=http://localhost:9090
+   REACT_APP_PROMETHEUS_URL=https://prometheus-central.adda247.com
    
    # Application Configuration
    REACT_APP_VERSION=1.0.0

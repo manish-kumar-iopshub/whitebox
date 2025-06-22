@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const PROMETHEUS_BASE_URL = process.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090';
+const PROMETHEUS_BASE_URL = process.env.REACT_APP_PROMETHEUS_URL || 'https://prometheus-central.adda247.com';
 
 console.log('Prometheus API configured with base URL:', PROMETHEUS_BASE_URL);
 

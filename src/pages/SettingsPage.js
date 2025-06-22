@@ -13,7 +13,7 @@ const SettingsPage = () => {
   // Get version and environment from env variables
   const appVersion = process.env.REACT_APP_VERSION || 'latest';
   const environment = process.env.REACT_APP_ENVIRONMENT || 'localhost';
-  const prometheusUrl = process.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090';
+  const prometheusUrl = process.env.REACT_APP_PROMETHEUS_URL || 'https://prometheus-central.adda247.com';
 
   useEffect(() => {
     const checkConnectivity = async () => {

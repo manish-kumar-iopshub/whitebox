@@ -53,7 +53,6 @@ const formatTimeRange = (start, end) => {
 const createDayBasedChunks = (startTime, endTime) => {
   const chunks = [];
   const startDate = new Date(startTime * 1000);
-  const endDate = new Date(endTime * 1000);
   
   // Always create at least 2 chunks, splitting at day boundaries
   // Even for single day ranges, split at midnight
@@ -81,37 +80,37 @@ const createDayBasedChunks = (startTime, endTime) => {
 };
 
 // Helper function to calculate optimal step size with consistency
-const calculateOptimalStep = (startTime, endTime, maxPoints = 10000) => {
-  const duration = endTime - startTime;
-  const optimalStep = Math.ceil(duration / maxPoints);
-  
-  // Use consistent step sizes: 1m, 5m, 15m, 1h, 6h, 1d
-  const stepSizes = [60, 300, 900, 3600, 21600, 86400];
-  
-  // Find the smallest step size that's >= optimalStep
-  for (const step of stepSizes) {
-    if (step >= optimalStep) {
-      return step;
-    }
-  }
-  
-  // If optimalStep is larger than any predefined step, use the largest
-  return stepSizes[stepSizes.length - 1];
-};
+// const calculateOptimalStep = (startTime, endTime, maxPoints = 10000) => {
+//   const duration = endTime - startTime;
+//   const optimalStep = Math.ceil(duration / maxPoints);
+//   
+//   // Use consistent step sizes: 1m, 5m, 15m, 1h, 6h, 1d
+//   const stepSizes = [60, 300, 900, 3600, 21600, 86400];
+//   
+//   // Find the smallest step size that's >= optimalStep
+//   for (const step of stepSizes) {
+//     if (step >= optimalStep) {
+//       return step;
+//     }
+//   }
+//   
+//   // If optimalStep is larger than any predefined step, use the largest
+//   return stepSizes[stepSizes.length - 1];
+// };
 
 // Helper function to chunk time ranges (legacy - keeping for compatibility)
-const chunkTimeRange = (startTime, endTime, maxChunkDuration = 7 * 24 * 3600) => { // 7 days max per chunk
-  const chunks = [];
-  let currentStart = startTime;
-  
-  while (currentStart < endTime) {
-    const chunkEnd = Math.min(currentStart + maxChunkDuration, endTime);
-    chunks.push({ start: currentStart, end: chunkEnd });
-    currentStart = chunkEnd;
-  }
-  
-  return chunks;
-};
+// const chunkTimeRange = (startTime, endTime, maxChunkDuration = 7 * 24 * 3600) => { // 7 days max per chunk
+//   const chunks = [];
+//   let currentStart = startTime;
+//   
+//   while (currentStart < endTime) {
+//     const chunkEnd = Math.min(currentStart + maxChunkDuration, endTime);
+//     chunks.push({ start: currentStart, end: chunkEnd });
+//     currentStart = chunkEnd;
+//   }
+//   
+//   return chunks;
+// };
 
 // Get all available targets
 export const getTargets = async () => {
@@ -326,7 +325,6 @@ const processDowntimeDataAccurate = (values, startTime, endTime) => {
   
   let currentDowntimeStart = null;
   let lastTimestamp = null;
-  let lastValue = null;
   
   for (let i = 0; i < sortedValues.length; i++) {
     const [timestamp, value] = sortedValues[i];
@@ -357,7 +355,6 @@ const processDowntimeDataAccurate = (values, startTime, endTime) => {
     }
     
     lastTimestamp = timestampInt;
-    lastValue = value;
   }
   
   // Handle case where downtime extends to the end of the time range
@@ -447,7 +444,6 @@ export const getGroupDowntimePeriods = async (targets, start, end, onProgress = 
     // Process each target separately to avoid chunk boundary issues
     for (const target of targets) {
       console.log(`Processing target: ${target}`);
-      let targetDowntimes = [];
       
       // Prepare all API calls for this target
       const targetPromises = [];
@@ -540,70 +536,68 @@ export const getGroupDowntimePeriods = async (targets, start, end, onProgress = 
 };
 
 // More accurate group downtime data processing
-const processGroupDowntimeDataAccurate = (results, startTime, endTime, targets) => {
-  const downtimePeriods = [];
-  
-  // Process each target's data
-  results.forEach(result => {
-    const target = result.metric.instance;
-    const values = result.values || [];
-    
-    if (values.length === 0) return;
+// const processGroupDowntimeDataAccurate = (results, startTime, endTime, targets) => {
+//   const downtimePeriods = [];
+//   
+//   // Process each target's data
+//   results.forEach(result => {
+//     const target = result.metric.instance;
+//     const values = result.values || [];
+//     
+//     if (values.length === 0) return;
 
-    let currentDowntimeStart = null;
-    let lastTimestamp = null;
-    let lastValue = null;
-    
-    for (let i = 0; i < values.length; i++) {
-      const [timestamp, value] = values[i];
-      const timestampInt = parseInt(timestamp);
-      const isDown = value === '0';
-      
-      // Skip if this is the same timestamp as the last one
-      if (lastTimestamp === timestampInt) {
-        continue;
-      }
-      
-      if (isDown && currentDowntimeStart === null) {
-        // Start of a new downtime period
-        currentDowntimeStart = timestampInt;
-      } else if (!isDown && currentDowntimeStart !== null) {
-        // End of a downtime period - service came back up
-        const downtimeEnd = timestampInt;
-        const duration = (downtimeEnd - currentDowntimeStart) / 60; // Duration in minutes
-        
-        if (duration > 0) {
-          downtimePeriods.push({
-            target: target,
-            start: new Date(currentDowntimeStart * 1000),
-            end: new Date(downtimeEnd * 1000),
-            duration: duration,
-          });
-        }
-        currentDowntimeStart = null;
-      }
-      
-      lastTimestamp = timestampInt;
-      lastValue = value;
-    }
-    
-    // Handle case where downtime extends to the end of the time range
-    if (currentDowntimeStart !== null) {
-      const duration = (endTime - currentDowntimeStart) / 60;
-      
-      if (duration > 0) {
-        downtimePeriods.push({
-          target: target,
-          start: new Date(currentDowntimeStart * 1000),
-          end: new Date(endTime * 1000),
-          duration: duration,
-        });
-      }
-    }
-  });
+//     let currentDowntimeStart = null;
+//     let lastTimestamp = null;
+//     
+//     for (let i = 0; i < values.length; i++) {
+//       const [timestamp, value] = values[i];
+//       const timestampInt = parseInt(timestamp);
+//       const isDown = value === '0';
+//       
+//       // Skip if this is the same timestamp as the last one
+//       if (lastTimestamp === timestampInt) {
+//         continue;
+//       }
+//       
+//       if (isDown && currentDowntimeStart === null) {
+//         // Start of a new downtime period
+//         currentDowntimeStart = timestampInt;
+//       } else if (!isDown && currentDowntimeStart !== null) {
+//         // End of a downtime period - service came back up
+//         const downtimeEnd = timestampInt;
+//         const duration = (downtimeEnd - currentDowntimeStart) / 60; // Duration in minutes
+//         
+//         if (duration > 0) {
+//           downtimePeriods.push({
+//             target: target,
+//             start: new Date(currentDowntimeStart * 1000),
+//             end: new Date(downtimeEnd * 1000),
+//             duration: duration,
+//           });
+//         }
+//         currentDowntimeStart = null;
+//       }
+//       
+//       lastTimestamp = timestampInt;
+//     }
+//     
+//     // Handle case where downtime extends to the end of the time range
+//     if (currentDowntimeStart !== null) {
+//       const duration = (endTime - currentDowntimeStart) / 60;
+//       
+//       if (duration > 0) {
+//         downtimePeriods.push({
+//           target: target,
+//           start: new Date(currentDowntimeStart * 1000),
+//           end: new Date(endTime * 1000),
+//           duration: duration,
+//         });
+//       }
+//     }
+//   });
 
-  return downtimePeriods;
-};
+//   return downtimePeriods;
+// };
 
 // Remove duplicate group downtime periods
 const removeDuplicateGroupDowntimes = (downtimes) => {

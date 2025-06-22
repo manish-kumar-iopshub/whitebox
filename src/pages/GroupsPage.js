@@ -1,5 +1,6 @@
 import React from 'react';
 import DomainGrouping from '../components/DomainGrouping';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 
 const GroupsPage = ({ 
   targets, 
@@ -15,31 +16,24 @@ const GroupsPage = ({
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        marginBottom: '30px'
-      }}>
-        <span style={{ fontSize: '24px' }}>📁</span>
-        <h1 style={{ margin: 0, color: '#2c3e50' }}>Domain Groups</h1>
+    <div className="p-6">
+      <div className="flex items-center gap-4 mb-8">
+        <span className="text-2xl">📁</span>
+        <h1 className="m-0 text-2xl font-bold text-gray-900">Domain Groups</h1>
       </div>
-
-      {/* Combined Domain Grouping and Overview */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-      }}>
-        <DomainGrouping 
-          targets={targets}
-          targetStatuses={targetStatuses}
-          onGroupChange={onGroupChange}
-          onGroupClick={handleGroupClick}
-        />
-      </div>
+      <Card className="shadow-sm border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Domain Grouping & Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DomainGrouping 
+            targets={targets}
+            targetStatuses={targetStatuses}
+            onGroupChange={onGroupChange}
+            onGroupClick={handleGroupClick}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

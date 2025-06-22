@@ -5,6 +5,9 @@ import {
   loadCustomGroups,
   calculateGroupUptime
 } from '../utils/domainUtils';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 const DomainGrouping = ({ 
   targets, 
@@ -21,8 +24,6 @@ const DomainGrouping = ({
   useEffect(() => {
     const savedGroups = loadCustomGroups();
     setCustomGroups(savedGroups);
-    
-    // Create domain groups
     const groups = createCustomGroups(targets, savedGroups);
     setDomainGroups(groups);
     onGroupChange(groups);
@@ -34,11 +35,9 @@ const DomainGrouping = ({
         name: newGroupName.trim(),
         domains: selectedDomains
       };
-      
       const updatedGroups = [...customGroups, newGroup];
       setCustomGroups(updatedGroups);
       saveCustomGroups(updatedGroups);
-      
       setNewGroupName('');
       setSelectedDomains([]);
       setShowCustomForm(false);
@@ -67,250 +66,100 @@ const DomainGrouping = ({
 
   return (
     <div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ margin: 0, color: '#2c3e50' }}>Domain Groups</h3>
-        <button
-          onClick={() => setShowCustomForm(!showCustomForm)}
-          style={{
-            background: '#3498db',
-            border: 'none',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
-        >
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-semibold text-gray-900 m-0">Domain Groups</h3>
+        <Button onClick={() => setShowCustomForm(!showCustomForm)} variant="default">
           {showCustomForm ? 'Cancel' : '+ Add Custom Group'}
-        </button>
+        </Button>
       </div>
-
-      {/* Custom Group Form */}
       {showCustomForm && (
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '20px',
-          border: '1px solid #e9ecef'
-        }}>
-          <h4 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>Create Custom Group</h4>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#2c3e50' }}>
-              Group Name
-            </label>
-            <input
-              type="text"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              placeholder="Enter group name"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#2c3e50' }}>
-              Select Domains
-            </label>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: '10px',
-              maxHeight: '200px',
-              overflowY: 'auto',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              padding: '10px',
-              backgroundColor: 'white'
-            }}>
-              {targets.map(domain => (
-                <label key={domain} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedDomains.includes(domain)}
-                    onChange={() => handleDomainToggle(domain)}
-                  />
-                  {domain}
-                </label>
-              ))}
+        <Card className="mb-6 shadow-sm border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-gray-900">Create Custom Group</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Group Name</label>
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Enter group name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-          </div>
-          
-          <button
-            onClick={handleAddCustomGroup}
-            disabled={!newGroupName.trim() || selectedDomains.length === 0}
-            style={{
-              background: '#27ae60',
-              border: 'none',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              opacity: (!newGroupName.trim() || selectedDomains.length === 0) ? 0.6 : 1
-            }}
-          >
-            Create Group
-          </button>
-        </div>
-      )}
-
-      {/* Custom Groups List */}
-      {customGroups.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>Custom Groups</h4>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '15px'
-          }}>
-            {customGroups.map(group => (
-              <div key={group.name} style={{
-                backgroundColor: '#e8f4fd',
-                borderRadius: '8px',
-                padding: '15px',
-                border: '1px solid #b3d9ff'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '10px'
-                }}>
-                  <strong style={{ color: '#2c3e50' }}>{group.name}</strong>
-                  <button
-                    onClick={() => handleRemoveCustomGroup(group.name)}
-                    style={{
-                      background: '#e74c3c',
-                      border: 'none',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <div style={{ fontSize: '14px', color: '#7f8c8d' }}>
-                  {group.domains.length} domain{group.domains.length !== 1 ? 's' : ''}
-                </div>
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium text-gray-700">Select Domains</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-2 bg-white">
+                {targets.map(domain => (
+                  <label key={domain} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={selectedDomains.includes(domain)}
+                      onChange={() => handleDomainToggle(domain)}
+                      className="accent-blue-600"
+                    />
+                    {domain}
+                  </label>
+                ))}
               </div>
+            </div>
+            <Button
+              onClick={handleAddCustomGroup}
+              disabled={!newGroupName.trim() || selectedDomains.length === 0}
+              variant="default"
+              className="mt-2"
+            >
+              Create Group
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {customGroups.length > 0 && (
+        <div className="mb-6">
+          <h4 className="mb-2 text-blue-600 text-base font-semibold">Custom Groups</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {customGroups.map(group => (
+              <Card key={group.name} className="bg-blue-50 border border-blue-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="truncate text-base font-semibold text-gray-900">{group.name}</CardTitle>
+                  <Button size="sm" variant="destructive" onClick={() => handleRemoveCustomGroup(group.name)}>
+                    Remove
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-gray-600">{group.domains.length} domain{group.domains.length !== 1 ? 's' : ''}</div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       )}
-
-      {/* Groups Overview */}
       {Object.keys(domainGroups).length > 0 && (
         <div>
-          <h4 style={{ margin: '0 0 20px 0', color: '#2c3e50' }}>Groups Overview</h4>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-            gap: '20px'
-          }}>
+          <h4 className="mb-4 text-blue-600 text-base font-semibold">Groups Overview</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.entries(domainGroups).map(([groupName, domains]) => {
               const groupTargets = targetStatuses.filter(t => domains.includes(t.target));
               const groupUptime = calculateGroupUptime(groupTargets.map(t => t.uptime || 0));
-              
               return (
-                <div 
+                <Card 
                   key={groupName} 
-                  style={{
-                    border: '1px solid #e1e8ed',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    backgroundColor: '#f8f9fa',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                  }}
+                  className="cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md border border-gray-200 shadow-sm"
                   onClick={() => handleGroupClick(groupName, domains)}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-                  }}
                 >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#3498db', fontSize: '18px' }}>{groupName}</h4>
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      backgroundColor: '#e1e8ed',
-                      color: '#7f8c8d'
-                    }}>
-                      {domains.length} domains
-                    </span>
-                  </div>
-                  
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <div>
-                      <div style={{
-                        fontSize: '28px',
-                        fontWeight: 'bold',
-                        color: (groupUptime || 0) >= 99 ? '#27ae60' : (groupUptime || 0) >= 95 ? '#f39c12' : '#e74c3c'
-                      }}>
-                        {(groupUptime || 0).toFixed(2)}%
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
-                        Uptime
-                      </div>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="truncate text-blue-600 text-base font-semibold max-w-[70%]">{groupName}</CardTitle>
+                    <Badge variant={groupUptime >= 99 ? 'default' : groupUptime >= 95 ? 'secondary' : 'destructive'}>{groupUptime.toFixed(2)}%</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-gray-600 mb-2">{domains.length} target{domains.length !== 1 ? 's' : ''}</div>
+                    <div className="text-sm text-blue-600 font-medium flex items-center gap-2">
+                      <span>Click to view details</span>
+                      <span className="text-lg">→</span>
                     </div>
-                  </div>
-                  
-                  <div style={{
-                    fontSize: '14px',
-                    color: '#3498db',
-                    borderTop: '1px solid #e1e8ed',
-                    paddingTop: '12px',
-                    fontWeight: '500',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}>
-                    <span>View Details</span>
-                    <span style={{ fontSize: '16px' }}>→</span>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { calculateGroupUptime, formatDate } from '../utils/domainUtils';
+import { formatDate } from '../utils/domainUtils';
 import { getTargetStatus, getUptimePercentage } from '../services/prometheusApi';
 import TimeRangePicker from './TimeRangePicker';
 import UptimeChart from './UptimeChart';
 import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
 import DebugInfo from './DebugInfo';
+import { Card, CardContent } from './ui/card';
+import { Button } from './ui/button';
 
 const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses, onBack }) => {
   const [targetStatuses, setTargetStatuses] = useState({});
@@ -125,80 +127,38 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <p style={{ color: '#7f8c8d' }}>Loading group data...</p>
+      <div className="text-center p-10">
+        <div className="text-2xl mb-2">⏳</div>
+        <p className="text-muted-foreground">Loading group data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
-        padding: '15px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        border: '1px solid #f5c6cb'
-      }}>
+      <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6 border border-destructive/20">
         <strong>Error:</strong> {error}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <div>
-          <button
+          <Button
             onClick={onBack}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#3498db',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginBottom: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
+            variant="ghost"
+            className="mb-2 flex items-center gap-2 text-discord-blurple"
           >
             ← Back to Groups
-          </button>
-          <h1 style={{ margin: 0, color: '#2c3e50' }}>{groupName}</h1>
-          <p style={{ margin: '5px 0 0 0', color: '#7f8c8d' }}>
-            {targets.length} target{targets.length !== 1 ? 's' : ''}
-          </p>
+          </Button>
+          <h1 className="m-0 text-2xl font-bold text-discord-blurple">{groupName}</h1>
+          <p className="mt-1 mb-0 text-muted-foreground">{targets.length} target{targets.length !== 1 ? 's' : ''}</p>
         </div>
-        
-        <button
-          onClick={handleExport}
-          style={{
-            background: '#27ae60',
-            border: 'none',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
+        <Button onClick={handleExport} variant="default" className="flex items-center gap-2">
           📊 Export CSV
-        </button>
+        </Button>
       </div>
 
       {/* Unified Time Range Picker */}
@@ -210,76 +170,42 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
       />
 
       {/* Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>📊</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2c3e50' }}>
-            {groupUptime.toFixed(2)}%
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Group Uptime</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">📊</div>
+            <div className="text-2xl font-bold text-discord-blurple">{groupUptime.toFixed(2)}%</div>
+            <div className="text-sm text-muted-foreground">Group Uptime</div>
+          </CardContent>
+        </Card>
         
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>✅</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
-            {upCount}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Targets Up</div>
-        </div>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">✅</div>
+            <div className="text-2xl font-bold text-discord-green">{upCount}</div>
+            <div className="text-sm text-muted-foreground">Targets Up</div>
+          </CardContent>
+        </Card>
         
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>❌</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#e74c3c' }}>
-            {downCount}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Targets Down</div>
-        </div>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">❌</div>
+            <div className="text-2xl font-bold text-discord-red">{downCount}</div>
+            <div className="text-sm text-muted-foreground">Targets Down</div>
+          </CardContent>
+        </Card>
         
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>🎯</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
-            {targets.length}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Total Targets</div>
-        </div>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">📈</div>
+            <div className="text-2xl font-bold text-discord-yellow">{targets.length}</div>
+            <div className="text-sm text-muted-foreground">Total Targets</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts and DowntimeTable use the same timeRange */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px'
-      }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <UptimeChart targets={targets} timeRange={timeRange} />
         <ResponseTimeChart targets={targets} timeRange={timeRange} />
       </div>

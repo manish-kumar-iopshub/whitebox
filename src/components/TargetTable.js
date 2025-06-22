@@ -1,5 +1,9 @@
 import React, { useMemo } from 'react';
 import { useTable, useSortBy, useFilters, useGlobalFilter } from 'react-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from './ui/table';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 const TargetTable = ({ data, onTargetClick }) => {
   const columns = useMemo(
@@ -9,8 +13,7 @@ const TargetTable = ({ data, onTargetClick }) => {
         accessor: 'target',
         Cell: ({ value }) => (
           <button 
-            className="btn btn-link" 
-            style={{ padding: 0, textDecoration: 'underline', color: '#007bff' }}
+            className="text-discord-blurple underline hover:no-underline p-0 bg-transparent border-none cursor-pointer"
             onClick={() => onTargetClick(value)}
           >
             {value}
@@ -21,16 +24,9 @@ const TargetTable = ({ data, onTargetClick }) => {
         Header: 'Status',
         accessor: 'success',
         Cell: ({ value }) => (
-          <span style={{
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            backgroundColor: value ? '#d4edda' : '#f8d7da',
-            color: value ? '#155724' : '#721c24'
-          }}>
+          <Badge variant={value ? 'default' : 'destructive'}>
             {value ? 'UP' : 'DOWN'}
-          </span>
+          </Badge>
         ),
       },
       {
@@ -86,70 +82,58 @@ const TargetTable = ({ data, onTargetClick }) => {
   );
 
   return (
-    <div className="card">
-      <h3>Target Status</h3>
-      <div className="form-group">
-        <input
-          type="text"
-          placeholder="Search targets..."
-          value={state.globalFilter || ''}
-          onChange={e => setGlobalFilter(e.target.value)}
-          className="form-control"
-          style={{ maxWidth: '300px' }}
-        />
-      </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table {...getTableProps()} style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
+    <Card>
+      <CardHeader>
+        <CardTitle>Target Status</CardTitle>
+        <div className="max-w-xs">
+          <Input
+            type="text"
+            placeholder="Search targets..."
+            value={state.globalFilter || ''}
+            onChange={e => setGlobalFilter(e.target.value)}
+          />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table {...getTableProps()}>
+          <TableHeader>
             {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
+              <TableRow {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
-                  <th
+                  <TableHead
                     {...column.getHeaderProps(column.getSortByToggleProps())}
-                    style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      borderBottom: '2px solid #ddd',
-                      backgroundColor: '#f8f9fa',
-                      cursor: 'pointer'
-                    }}
+                    className="cursor-pointer"
                   >
                     {column.render('Header')}
-                    <span>
+                    <span className="ml-1">
                       {column.isSorted
                         ? column.isSortedDesc
                           ? ' 🔽'
                           : ' 🔼'
                         : ''}
                     </span>
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
+          </TableHeader>
+          <TableBody {...getTableBodyProps()}>
             {rows.map(row => {
               prepareRow(row);
               return (
-                <tr {...row.getRowProps()}>
+                <TableRow {...row.getRowProps()}>
                   {row.cells.map(cell => (
-                    <td
-                      {...cell.getCellProps()}
-                      style={{
-                        padding: '12px',
-                        borderBottom: '1px solid #ddd'
-                      }}
-                    >
+                    <TableCell {...cell.getCellProps()}>
                       {cell.render('Cell')}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 };
 

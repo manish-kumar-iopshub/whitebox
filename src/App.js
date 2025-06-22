@@ -7,6 +7,8 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import TargetDetail from './components/TargetDetail';
 import GroupDetail from './components/GroupDetail';
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
+import { Button } from './components/ui/button';
 import { 
   getTargets, 
   getUptimePercentage, 
@@ -185,65 +187,45 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f5f5f5'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '40px',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔍</div>
-          <h2 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>Loading...</h2>
-          <p style={{ margin: 0, color: '#7f8c8d' }}>Connecting to Prometheus</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md mx-auto shadow-sm border border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-gray-900">
+              <span role="img" aria-label="search">🔍</span> Loading...
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center text-gray-600">
+            Connecting to Prometheus
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <div style={{ padding: '20px' }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '20px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{ color: '#e74c3c', margin: '0 0 15px 0' }}>Connection Error</h2>
-            <p style={{ color: '#7f8c8d', margin: '0 0 15px 0' }}>{error}</p>
-            <p style={{ color: '#7f8c8d', margin: '0 0 15px 0' }}>Please ensure:</p>
-            <ul style={{ color: '#7f8c8d', margin: '0 0 15px 0' }}>
-              <li>Prometheus is running and accessible</li>
-              <li>Blackbox Exporter is configured and scraping targets</li>
-              <li>The proxy configuration in package.json points to the correct Prometheus URL</li>
-            </ul>
-            <button 
-              style={{
-                background: '#3498db',
-                border: 'none',
-                color: 'white',
-                padding: '10px 20px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginRight: '10px'
-              }}
-              onClick={() => window.location.reload()}
-            >
-              Retry Connection
-            </button>
-          </div>
+        <div className="p-6 max-w-2xl mx-auto">
+          <Card className="mb-6 shadow-sm border border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-red-600 flex items-center gap-2">
+                <span role="img" aria-label="error">❗</span> Connection Error
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-2 text-gray-600">{error}</p>
+              <p className="mb-2 text-gray-600">Please ensure:</p>
+              <ul className="list-disc pl-6 mb-4 text-gray-600">
+                <li>Prometheus is running and accessible</li>
+                <li>Blackbox Exporter is configured and scraping targets</li>
+                <li>The proxy configuration in package.json points to the correct Prometheus URL</li>
+              </ul>
+              <Button onClick={() => window.location.reload()} variant="default">
+                Retry Connection
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -251,7 +233,7 @@ function App() {
 
   return (
     <Router>
-      <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <div className="min-h-screen bg-gray-50">
         <Navigation />
         <Routes>
           <Route path="/" element={<Navigate to="/groups" replace />} />

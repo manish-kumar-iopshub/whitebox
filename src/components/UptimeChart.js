@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { fetchUptimeData } from '../services/prometheusApi';
 import { formatDate, formatDuration } from '../utils/domainUtils';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 const UptimeChart = ({ target, timeRange, onTimeRangeChange, targets }) => {
   const [data, setData] = useState([]);
@@ -66,34 +67,23 @@ const UptimeChart = ({ target, timeRange, onTimeRangeChange, targets }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div style={{
-          backgroundColor: 'white',
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-          padding: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#2c3e50' }}>
+        <div className="bg-white border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-bold text-foreground mb-2">
             {formatDate(new Date(data.timestamp))}
           </p>
-          <p style={{ margin: '4px 0', color: '#7f8c8d' }}>
-            Uptime: <span style={{ color: '#27ae60', fontWeight: 'bold' }}>
+          <p className="text-muted-foreground mb-1">
+            Uptime: <span className="text-discord-green font-bold">
               {data.uptime.toFixed(2)}%
             </span>
           </p>
           {data.responseTime && (
-            <p style={{ margin: '4px 0', color: '#7f8c8d' }}>
-              Response Time: <span style={{ color: '#3498db', fontWeight: 'bold' }}>
+            <p className="text-muted-foreground mb-1">
+              Response Time: <span className="text-discord-blurple font-bold">
                 {formatDuration(data.responseTime * 1000)}
               </span>
             </p>
           )}
-          <p style={{ 
-            margin: '8px 0 0 0', 
-            fontSize: '12px', 
-            color: '#95a5a6',
-            fontStyle: 'italic'
-          }}>
+          <p className="text-xs text-muted-foreground italic mt-2">
             Click to zoom to this time
           </p>
         </div>
@@ -108,135 +98,88 @@ const UptimeChart = ({ target, timeRange, onTimeRangeChange, targets }) => {
 
   if (loading) {
     return (
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        marginBottom: '20px',
-        textAlign: 'center'
-      }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <p style={{ color: '#7f8c8d' }}>{loadingProgress}</p>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <div className="text-2xl mb-2">⏳</div>
+            <p className="text-muted-foreground">{loadingProgress}</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        marginBottom: '20px'
-      }}>
-        <div style={{
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          padding: '15px',
-          borderRadius: '8px',
-          border: '1px solid #f5c6cb'
-        }}>
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20">
+            <strong>Error:</strong> {error}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        marginBottom: '20px',
-        textAlign: 'center'
-      }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>📊</div>
-        <p style={{ color: '#7f8c8d' }}>No uptime data available for the selected time range</p>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <div className="text-2xl mb-2">📊</div>
+            <p className="text-muted-foreground">No uptime data available for the selected time range</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      marginBottom: '20px'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ margin: 0, color: '#2c3e50' }}>
-          Uptime Trend {targets && targets.length > 0 ? `(${targets.length} targets)` : ''}
-        </h3>
-        <div style={{
-          fontSize: '12px',
-          color: '#7f8c8d',
-          backgroundColor: '#f8f9fa',
-          padding: '6px 10px',
-          borderRadius: '4px',
-          border: '1px solid #e9ecef'
-        }}>
-          Click on chart to zoom • Drag to select range
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>
+            Uptime Trend {targets && targets.length > 0 ? `(${targets.length} targets)` : ''}
+          </CardTitle>
+          <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-md border">
+            Click on chart to zoom • Drag to select range
+          </div>
         </div>
-      </div>
-
-      <ResponsiveContainer width="100%" height={400}>
-        <AreaChart
-          data={data}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          onClick={handleChartClick}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="timestamp" 
-            tickFormatter={formatXAxis}
-            stroke="#7f8c8d"
-            fontSize={12}
-          />
-          <YAxis 
-            domain={[0, 100]}
-            stroke="#7f8c8d"
-            fontSize={12}
-            tickFormatter={(value) => `${value}%`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="uptime"
-            stroke="#27ae60"
-            fill="#27ae60"
-            fillOpacity={0.3}
-            strokeWidth={2}
-          />
-          <ReferenceLine y={95} stroke="#e74c3c" strokeDasharray="3 3" />
-        </AreaChart>
-      </ResponsiveContainer>
-
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: '15px',
-        fontSize: '12px',
-        color: '#7f8c8d'
-      }}>
-        <div>
-          <span style={{ color: '#27ae60', fontWeight: 'bold' }}>●</span> Uptime Percentage
-        </div>
-        <div>
-          <span style={{ color: '#e74c3c', fontWeight: 'bold' }}>---</span> 95% Threshold
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+          <AreaChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            onClick={handleChartClick}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis 
+              dataKey="timestamp" 
+              tickFormatter={formatXAxis}
+              stroke="#7f8c8d"
+              fontSize={12}
+            />
+            <YAxis 
+              domain={[0, 100]}
+              tickFormatter={(value) => `${value}%`}
+              stroke="#7f8c8d"
+              fontSize={12}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <ReferenceLine y={95} stroke="#e74c3c" strokeDasharray="3 3" />
+            <Area
+              type="monotone"
+              dataKey="uptime"
+              stroke="#27ae60"
+              fill="#27ae60"
+              fillOpacity={0.3}
+              strokeWidth={2}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 };
 

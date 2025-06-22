@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { testConnection } from '../services/prometheusApi';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
 
 const ConnectionTest = () => {
   const [testing, setTesting] = useState(false);
@@ -34,65 +36,40 @@ const ConnectionTest = () => {
   };
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      marginBottom: '20px'
-    }}>
-      <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50' }}>Connection Test</h3>
-      
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button
-          onClick={handleTest}
-          disabled={testing}
-          style={{
-            background: '#3498db',
-            border: 'none',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: testing ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            opacity: testing ? 0.6 : 1
-          }}
-        >
-          {testing ? 'Testing...' : 'Test Connection'}
-        </button>
-        
-        <button
-          onClick={handleTestTargets}
-          disabled={testing}
-          style={{
-            background: '#27ae60',
-            border: 'none',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: testing ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            opacity: testing ? 0.6 : 1
-          }}
-        >
-          {testing ? 'Testing...' : 'Test Targets Query'}
-        </button>
-      </div>
-
-      {result && (
-        <div style={{
-          padding: '15px',
-          borderRadius: '8px',
-          backgroundColor: result.success ? '#d4edda' : '#f8d7da',
-          color: result.success ? '#155724' : '#721c24',
-          border: `1px solid ${result.success ? '#c3e6cb' : '#f5c6cb'}`
-        }}>
-          <strong>{result.success ? '✅ Success:' : '❌ Error:'}</strong> {result.message}
+    <Card>
+      <CardHeader>
+        <CardTitle>Connection Test</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-3 mb-6">
+          <Button
+            onClick={handleTest}
+            disabled={testing}
+            variant="default"
+          >
+            {testing ? 'Testing...' : 'Test Connection'}
+          </Button>
+          
+          <Button
+            onClick={handleTestTargets}
+            disabled={testing}
+            variant="default"
+          >
+            {testing ? 'Testing...' : 'Test Targets Query'}
+          </Button>
         </div>
-      )}
-    </div>
+
+        {result && (
+          <div className={`p-4 rounded-lg border ${
+            result.success 
+              ? 'bg-green-50 text-green-800 border-green-200' 
+              : 'bg-red-50 text-red-800 border-red-200'
+          }`}>
+            <strong>{result.success ? '✅ Success:' : '❌ Error:'}</strong> {result.message}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

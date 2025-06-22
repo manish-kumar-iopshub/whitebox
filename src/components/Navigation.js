@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Card, CardContent } from './ui/card';
 
 const Navigation = () => {
   const location = useLocation();
@@ -42,73 +43,27 @@ const Navigation = () => {
   };
 
   return (
-    <nav style={{
-      backgroundColor: '#2c3e50',
-      padding: '0 20px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px'
-        }}>
-          <Link to="/groups" style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            textDecoration: 'none'
-          }}>
-            <span>🔍</span>
-            <span>Blackbox Monitor</span>
-          </Link>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          gap: '5px'
-        }}>
+    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+        <Link to="/groups" className="flex items-center gap-2 text-xl font-semibold text-gray-900 no-underline hover:text-blue-600 transition-colors">
+          <span>🔍</span>
+          <span>Blackbox Monitor</span>
+        </Link>
+        <div className="flex gap-1">
           {navItems.map(item => (
             <Link
               key={item.id}
               to={item.path}
-              style={{
-                background: isActive(item.path) ? '#3498db' : 'transparent',
-                border: 'none',
-                color: 'white',
-                padding: '15px 20px',
-                cursor: 'pointer',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                transition: 'all 0.2s ease',
-                position: 'relative',
-                textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = isActive(item.path) ? '#2980b9' : '#34495e';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = isActive(item.path) ? '#3498db' : 'transparent';
-              }}
               title={item.description}
+              className={
+                `flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 no-underline
+                ${isActive(item.path)
+                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                `
+              }
             >
-              <span style={{ fontSize: '16px' }}>{item.icon}</span>
+              <span className="text-base">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
           ))}

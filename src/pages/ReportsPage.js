@@ -1,6 +1,7 @@
 import React from 'react';
 import TimeRangePicker from '../components/TimeRangePicker';
 import ReportGenerator from '../components/ReportGenerator';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 
 const ReportsPage = ({ 
   targetStatuses, 
@@ -9,104 +10,64 @@ const ReportsPage = ({
   customGroups 
 }) => {
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        marginBottom: '30px'
-      }}>
-        <span style={{ fontSize: '24px' }}>📄</span>
-        <h1 style={{ margin: 0, color: '#2c3e50' }}>Reports</h1>
+    <div className="p-6">
+      <div className="flex items-center gap-4 mb-8">
+        <span className="text-2xl">📄</span>
+        <h1 className="m-0 text-2xl font-bold text-gray-900">Reports</h1>
       </div>
-
-      {/* Time Range Picker */}
       <TimeRangePicker 
         onTimeRangeChange={onTimeRangeChange}
         initialStart={timeRange.start}
         initialEnd={timeRange.end}
       />
-
-      {/* Report Generator */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-      }}>
-        <ReportGenerator 
-          targets={targetStatuses}
-          timeRange={timeRange}
-          customGroups={Object.entries(customGroups).map(([name, domains]) => ({ name, domains }))}
-        />
-      </div>
-
-      {/* Report Templates */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        marginTop: '20px'
-      }}>
-        <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50' }}>Report Templates</h3>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '20px'
-        }}>
-          <div style={{
-            border: '1px solid #e1e8ed',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa'
-          }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#3498db' }}>📊 Summary Report</h4>
-            <p style={{ margin: '0 0 15px 0', color: '#7f8c8d', fontSize: '14px' }}>
-              Overview of all targets with status and uptime percentages
-            </p>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#7f8c8d', fontSize: '14px' }}>
-              <li>Overall uptime statistics</li>
-              <li>Target status summary</li>
-              <li>Group overview</li>
-            </ul>
+      <Card className="mb-6 shadow-sm border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Report Generator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportGenerator 
+            targets={targetStatuses}
+            timeRange={timeRange}
+            customGroups={Object.entries(customGroups).map(([name, domains]) => ({ name, domains }))}
+          />
+        </CardContent>
+      </Card>
+      <Card className="shadow-sm border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Report Templates</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm">
+              <h4 className="mb-2 text-blue-600 text-base font-semibold flex items-center gap-2">📊 Summary Report</h4>
+              <p className="mb-2 text-gray-600 text-sm">Overview of all targets with status and uptime percentages</p>
+              <ul className="list-disc pl-5 text-gray-600 text-sm mb-0">
+                <li>Overall uptime statistics</li>
+                <li>Target status summary</li>
+                <li>Group overview</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm">
+              <h4 className="mb-2 text-blue-600 text-base font-semibold flex items-center gap-2">📋 Detailed Report</h4>
+              <p className="mb-2 text-gray-600 text-sm">Comprehensive information including response times and metrics</p>
+              <ul className="list-disc pl-5 text-gray-600 text-sm mb-0">
+                <li>Individual target details</li>
+                <li>Response time analysis</li>
+                <li>Downtime history</li>
+              </ul>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm">
+              <h4 className="mb-2 text-blue-600 text-base font-semibold flex items-center gap-2">📈 CSV Export</h4>
+              <p className="mb-2 text-gray-600 text-sm">Raw data in spreadsheet format for further analysis</p>
+              <ul className="list-disc pl-5 text-gray-600 text-sm mb-0">
+                <li>Machine-readable format</li>
+                <li>Excel/Google Sheets compatible</li>
+                <li>Custom analysis ready</li>
+              </ul>
+            </div>
           </div>
-          
-          <div style={{
-            border: '1px solid #e1e8ed',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa'
-          }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#3498db' }}>📋 Detailed Report</h4>
-            <p style={{ margin: '0 0 15px 0', color: '#7f8c8d', fontSize: '14px' }}>
-              Comprehensive information including response times and metrics
-            </p>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#7f8c8d', fontSize: '14px' }}>
-              <li>Individual target details</li>
-              <li>Response time analysis</li>
-              <li>Downtime history</li>
-            </ul>
-          </div>
-          
-          <div style={{
-            border: '1px solid #e1e8ed',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa'
-          }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#3498db' }}>📈 CSV Export</h4>
-            <p style={{ margin: '0 0 15px 0', color: '#7f8c8d', fontSize: '14px' }}>
-              Raw data in spreadsheet format for further analysis
-            </p>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#7f8c8d', fontSize: '14px' }}>
-              <li>Machine-readable format</li>
-              <li>Excel/Google Sheets compatible</li>
-              <li>Custom analysis ready</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -5,8 +5,10 @@ import TimeRangePicker from './TimeRangePicker';
 import UptimeChart from './UptimeChart';
 import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
-import UptimeDonut from './UptimeDonut';
 import DebugInfo from './DebugInfo';
+import { Card, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 const TargetDetail = ({ target, onBack }) => {
   const [status, setStatus] = useState(null);
@@ -58,179 +60,88 @@ const TargetDetail = ({ target, onBack }) => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-        <p style={{ color: '#7f8c8d' }}>Loading target data...</p>
+      <div className="text-center p-10">
+        <div className="text-2xl mb-2">⏳</div>
+        <p className="text-gray-600">Loading target data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
-        padding: '15px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        border: '1px solid #f5c6cb'
-      }}>
+      <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-200">
         <strong>Error:</strong> {error}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <div>
-          <button
+          <Button
             onClick={onBack}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#3498db',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginBottom: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
+            variant="ghost"
+            className="mb-2 flex items-center gap-2 text-blue-600 hover:text-blue-700"
           >
             ← Back to Targets
-          </button>
-          <h1 style={{ margin: 0, color: '#2c3e50' }}>{target}</h1>
-          <p style={{ margin: '5px 0 0 0', color: '#7f8c8d' }}>
-            Individual Target Monitoring
-          </p>
+          </Button>
+          <h1 className="m-0 text-2xl font-bold text-gray-900">{target}</h1>
+          <p className="mt-1 mb-0 text-gray-600">Individual Target Monitoring</p>
         </div>
-        
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <span style={{
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            backgroundColor: status?.status === 'up' ? '#d4edda' : '#f8d7da',
-            color: status?.status === 'up' ? '#155724' : '#721c24'
-          }}>
+        <div className="flex items-center gap-2">
+          <Badge variant={status?.status === 'up' ? 'default' : 'destructive'} className="text-sm">
             {status?.status === 'up' ? '✅ UP' : '❌ DOWN'}
-          </span>
+          </Badge>
         </div>
       </div>
-
-      {/* Unified Time Range Picker */}
       <TimeRangePicker
         onTimeRangeChange={handleTimeRangeChange}
         initialStart={timeRange.start}
         initialEnd={timeRange.end}
         timezone="Asia/Kolkata"
       />
-
-      {/* Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>📊</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2c3e50' }}>
-            {uptime.toFixed(2)}%
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Uptime</div>
-        </div>
-        
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>⚡</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
-            {status?.responseTime ? `${(status.responseTime * 1000).toFixed(0)}ms` : 'N/A'}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Response Time</div>
-        </div>
-        
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>🕒</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#7f8c8d' }}>
-            {status?.lastCheck ? formatDate(status.lastCheck) : 'N/A'}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Last Check</div>
-        </div>
-        
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '10px' }}>📈</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
-            {status?.status === 'up' ? '100%' : '0%'}
-          </div>
-          <div style={{ fontSize: '14px', color: '#7f8c8d' }}>Current Status</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="text-center shadow-sm border border-gray-200">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">📊</div>
+            <div className="text-2xl font-bold text-blue-600">{uptime.toFixed(2)}%</div>
+            <div className="text-sm text-gray-600">Uptime</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center shadow-sm border border-gray-200">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">⚡</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {status?.responseTime ? `${(status.responseTime * 1000).toFixed(0)}ms` : 'N/A'}
+            </div>
+            <div className="text-sm text-gray-600">Response Time</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center shadow-sm border border-gray-200">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">🕒</div>
+            <div className="text-2xl font-bold text-gray-700">
+              {status?.lastCheck ? formatDate(status.lastCheck) : 'N/A'}
+            </div>
+            <div className="text-sm text-gray-600">Last Check</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center shadow-sm border border-gray-200">
+          <CardContent className="pt-6">
+            <div className="text-3xl mb-2">📈</div>
+            <div className="text-2xl font-bold text-green-600">
+              {status?.status === 'up' ? '100%' : '0%'}
+            </div>
+            <div className="text-sm text-gray-600">Current Status</div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Charts */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px'
-      }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <UptimeChart target={target} timeRange={timeRange} />
         <ResponseTimeChart target={target} timeRange={timeRange} />
       </div>
-
-      {/* Uptime Donut Chart */}
-      <div style={{ marginBottom: '30px' }}>
-        <UptimeDonut
-          data={[{
-            name: target,
-            value: uptime,
-            status: status?.status || 'unknown'
-          }]}
-          title={`${target} - Uptime Overview`}
-        />
-      </div>
-
-      {/* Downtime Table */}
       <DowntimeTable target={target} timeRange={timeRange} onDebugInfo={setDebugInfo} />
-
-      {/* Debug Info Collapsed Tab */}
       <DebugInfo debugInfo={debugInfo} />
     </div>
   );

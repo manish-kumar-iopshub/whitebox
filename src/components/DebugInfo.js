@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
 
 const DebugInfo = ({ debugInfo }) => {
   const [expanded, setExpanded] = useState(false);
@@ -7,96 +9,57 @@ const DebugInfo = ({ debugInfo }) => {
   if (!debugInfo || debugInfo.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 24 }}>
+    <div className="mt-6">
       <div
-        style={{
-          cursor: 'pointer',
-          color: '#888',
-          fontSize: 14,
-          borderTop: '1px solid #eee',
-          paddingTop: 8,
-          marginTop: 16,
-          userSelect: 'none',
-        }}
+        className="cursor-pointer text-muted-foreground text-sm border-t border-border pt-2 mt-4 select-none"
         onClick={() => setExpanded((e) => !e)}
       >
-        <span style={{ marginRight: 8 }}>{expanded ? '▼' : '▶'}</span>
+        <span className="mr-2">{expanded ? '▼' : '▶'}</span>
         Debug Info
       </div>
       {expanded && (
-        <div style={{ marginTop: 8 }}>
-          <button
-            style={{
-              background: '#eee',
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              padding: '6px 16px',
-              cursor: 'pointer',
-              fontSize: 14,
-              marginBottom: 8,
-            }}
+        <div className="mt-2">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowDialog(true)}
+            className="mb-2"
           >
             Show API Call Details
-          </button>
+          </Button>
           {showDialog && (
             <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                background: 'rgba(0,0,0,0.3)',
-                zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center"
               onClick={() => setShowDialog(false)}
             >
-              <div
-                style={{
-                  background: 'white',
-                  borderRadius: 10,
-                  padding: 24,
-                  minWidth: 350,
-                  maxWidth: 600,
-                  maxHeight: '80vh',
-                  overflowY: 'auto',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                }}
+              <Card
+                className="min-w-[350px] max-w-[600px] max-h-[80vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
               >
-                <h3 style={{ marginTop: 0 }}>API Call Details</h3>
-                <ol style={{ paddingLeft: 20 }}>
-                  {debugInfo.map((chunk, idx) => (
-                    <li key={idx} style={{ marginBottom: 12 }}>
-                      <div><b>Chunk {idx + 1}</b></div>
-                      {chunk.target && <div>Target: <code>{chunk.target}</code></div>}
-                      {chunk.targets && <div>Targets: <code>{Array.isArray(chunk.targets) ? chunk.targets.join(', ') : chunk.targets}</code></div>}
-                      <div>Start: <code>{chunk.start?.toLocaleString?.('en-IN', { timeZone: 'Asia/Kolkata' }) || String(chunk.start)}</code></div>
-                      <div>End: <code>{chunk.end?.toLocaleString?.('en-IN', { timeZone: 'Asia/Kolkata' }) || String(chunk.end)}</code></div>
-                      <div>Message: <code>{chunk.message}</code></div>
-                    </li>
-                  ))}
-                </ol>
-                <button
-                  style={{
-                    background: '#3498db',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '8px 20px',
-                    cursor: 'pointer',
-                    fontSize: 15,
-                    marginTop: 8,
-                  }}
-                  onClick={() => setShowDialog(false)}
-                >
-                  Close
-                </button>
-              </div>
+                <CardHeader>
+                  <CardTitle>API Call Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ol className="list-decimal pl-5 space-y-3">
+                    {debugInfo.map((chunk, idx) => (
+                      <li key={idx} className="space-y-1">
+                        <div className="font-semibold">Chunk {idx + 1}</div>
+                        {chunk.target && <div>Target: <code className="bg-muted px-1 rounded">{chunk.target}</code></div>}
+                        {chunk.targets && <div>Targets: <code className="bg-muted px-1 rounded">{Array.isArray(chunk.targets) ? chunk.targets.join(', ') : chunk.targets}</code></div>}
+                        <div>Start: <code className="bg-muted px-1 rounded">{chunk.start?.toLocaleString?.('en-IN', { timeZone: 'Asia/Kolkata' }) || String(chunk.start)}</code></div>
+                        <div>End: <code className="bg-muted px-1 rounded">{chunk.end?.toLocaleString?.('en-IN', { timeZone: 'Asia/Kolkata' }) || String(chunk.end)}</code></div>
+                        <div>Message: <code className="bg-muted px-1 rounded">{chunk.message}</code></div>
+                      </li>
+                    ))}
+                  </ol>
+                  <Button
+                    onClick={() => setShowDialog(false)}
+                    className="mt-4"
+                  >
+                    Close
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

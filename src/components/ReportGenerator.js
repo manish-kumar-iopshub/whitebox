@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const ReportGenerator = ({ targets, timeRange, customGroups }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -164,47 +167,50 @@ const ReportGenerator = ({ targets, timeRange, customGroups }) => {
   };
 
   return (
-    <div className="card">
-      <h3>Report Generator</h3>
-      
-      <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <div className="form-group">
-          <label className="form-label">Report Type</label>
-          <select 
-            value={reportType} 
-            onChange={(e) => setReportType(e.target.value)}
-            className="form-control"
-            style={{ width: 'auto' }}
-          >
-            <option value="summary">Summary Report</option>
-            <option value="detailed">Detailed Report</option>
-          </select>
+    <Card>
+      <CardHeader>
+        <CardTitle>Report Generator</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-4 mb-6 flex-wrap">
+          <div>
+            <label className="block mb-1 text-sm font-medium">Report Type</label>
+            <Select value={reportType} onValueChange={setReportType}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="summary">Summary Report</SelectItem>
+                <SelectItem value="detailed">Detailed Report</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <button
-          className="btn btn-primary"
-          onClick={generatePDF}
-          disabled={isGenerating}
-        >
-          {isGenerating ? 'Generating PDF...' : 'Generate PDF Report'}
-        </button>
-        
-        <button
-          className="btn btn-secondary"
-          onClick={generateCSV}
-        >
-          Export CSV
-        </button>
-      </div>
+        <div className="flex gap-3 flex-wrap">
+          <Button
+            onClick={generatePDF}
+            disabled={isGenerating}
+            variant="default"
+          >
+            {isGenerating ? 'Generating PDF...' : 'Generate PDF Report'}
+          </Button>
+          
+          <Button
+            onClick={generateCSV}
+            variant="outline"
+          >
+            Export CSV
+          </Button>
+        </div>
 
-      <div style={{ marginTop: '15px', fontSize: '14px', color: '#666' }}>
-        <p><strong>Summary Report:</strong> Overview of all targets with status and uptime percentages</p>
-        <p><strong>Detailed Report:</strong> Comprehensive information including response times and metrics</p>
-        <p><strong>CSV Export:</strong> Raw data in spreadsheet format for further analysis</p>
-      </div>
-    </div>
+        <div className="mt-4 text-sm text-muted-foreground space-y-1">
+          <p><strong>Summary Report:</strong> Overview of all targets with status and uptime percentages</p>
+          <p><strong>Detailed Report:</strong> Comprehensive information including response times and metrics</p>
+          <p><strong>CSV Export:</strong> Raw data in spreadsheet format for further analysis</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

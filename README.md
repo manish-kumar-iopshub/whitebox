@@ -16,6 +16,7 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
 - **PostCSS Configuration**: Fixed build issues and improved CSS processing
 - **Component Optimization**: Streamlined component architecture and performance
 - **Error Handling**: Enhanced error states and user feedback
+- **Docker Support**: Added multi-stage Docker builds for production and development
 
 ## Features
 
@@ -98,6 +99,8 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
 
 ## Getting Started
 
+### Option 1: Local Development
+
 1. **Install Dependencies**:
    ```bash
    npm install
@@ -133,6 +136,97 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
 
 5. **Access the Application**:
    Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Option 2: Docker Deployment
+
+#### Quick Start (Production)
+```bash
+# Build and run production container
+docker build -t prometheus-blackbox-frontend .
+docker run -p 80:80 prometheus-blackbox-frontend
+```
+
+#### Development with Docker
+```bash
+# Build development image
+docker build --target development -t prometheus-blackbox-frontend:dev .
+
+# Run with volume mounting for hot reloading
+docker run -p 3000:3000 -v $(pwd):/app prometheus-blackbox-frontend:dev
+```
+
+#### Advanced Docker Usage
+
+**Production Build:**
+```bash
+# Build production image (optimized with nginx)
+docker build --target production -t prometheus-blackbox-frontend:prod .
+
+# Run production container
+docker run -d -p 80:80 --name blackbox-frontend prometheus-blackbox-frontend:prod
+
+# Access at http://localhost
+```
+
+**Development Build:**
+```bash
+# Build development image (includes all dependencies)
+docker build --target development -t prometheus-blackbox-frontend:dev .
+
+# Run with volume mounting for live code changes
+docker run -d -p 3000:3000 -v $(pwd):/app --name blackbox-frontend-dev prometheus-blackbox-frontend:dev
+
+# Access at http://localhost:3000
+```
+
+**Docker Compose Setup:**
+Create a `docker-compose.yml` file:
+```yaml
+version: '3.8'
+services:
+  blackbox-frontend:
+    build:
+      context: .
+      target: production
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+```
+
+Run with:
+```bash
+docker-compose up -d
+```
+
+#### Docker Configuration
+
+The Dockerfile includes:
+- **Multi-stage builds** for optimized production images
+- **Nginx** for serving production builds
+- **Node.js 18 Alpine** for smaller image sizes
+- **Development stage** with hot reloading support
+- **Proper .dockerignore** for faster builds
+
+#### Environment Configuration for Docker
+
+For production deployments, you can configure the Prometheus URL using environment variables:
+
+```bash
+# Run with custom Prometheus URL
+docker run -p 80:80 \
+  -e REACT_APP_PROMETHEUS_URL=https://your-prometheus-url.com \
+  prometheus-blackbox-frontend
+```
+
+Or create a custom nginx configuration:
+```bash
+# Copy custom nginx config
+docker run -p 80:80 \
+  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf \
+  prometheus-blackbox-frontend
+```
 
 ## URL Structure
 

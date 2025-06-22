@@ -1,18 +1,27 @@
-FROM node:18-alpine
+# --- Build Stage ---
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci --only=production
 
-# Copy source
 COPY . .
+RUN npm run build
 
-# Expose React dev server port
+# --- Nginx Stage ---
+FROM nginx:alpine AS production
+
+# Copy built files
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy env template and entrypoint script
+COPY env.template.js /usr/share/nginx/html/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Replace Nginx config if you want custom port (e.g. 3000)
+COPY nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE 3000
-
-# Start the development server
-# CMD ["npm", "start"]
-CMD ["npm", "start", "--", "--disable-host-check"]
+CMD ["/entrypoint.sh"]

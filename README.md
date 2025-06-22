@@ -62,6 +62,7 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
   - Detailed duration formatting (ss/mm/hh/dd)
   - Time range filtering capabilities
   - Annotation system for downtime events
+  - **Report Generation**: Generate detailed CSV reports with downtime statistics
 
 ### Improved Navigation
 - **Sticky Navigation**: Fixed navigation bar that stays in place during scrolling
@@ -86,6 +87,7 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
 ### Export Capabilities
 - CSV export for groups and individual targets
 - Comprehensive data including uptime, response times, and status
+- **Detailed Downtime Reports**: Generate CSV reports with downtime event count, unplanned downtime, total downtime, and uptime percentage
 - PDF report generation (planned)
 
 ### Responsive Design
@@ -109,12 +111,27 @@ A modern, responsive React frontend for monitoring targets using Prometheus Blac
    }
    ```
 
-3. **Start Development Server**:
+3. **Environment Variables** (Optional):
+   Create a `.env` file in the root directory to customize application settings:
+   ```bash
+   # Prometheus Configuration
+   REACT_APP_PROMETHEUS_URL=http://localhost:9090
+   
+   # Application Configuration
+   REACT_APP_VERSION=1.0.0
+   REACT_APP_ENVIRONMENT=development
+   ```
+   
+   If not set, defaults will be:
+   - `REACT_APP_VERSION`: "latest"
+   - `REACT_APP_ENVIRONMENT`: "localhost"
+
+4. **Start Development Server**:
    ```bash
    npm start
    ```
 
-4. **Access the Application**:
+5. **Access the Application**:
    Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## URL Structure

@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { AlertTriangle, Clock, Activity } from 'lucide-react';
+import { AlertTriangle, Clock, Activity, FileText } from 'lucide-react';
 
 const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const [downtimes, setDowntimes] = useState([]);
@@ -143,6 +143,43 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
     return `${seconds}s`;
   };
 
+  const generateReport = () => {
+    // Calculate total downtime duration
+    const totalDowntimeDuration = filteredDowntimes.reduce((total, d) => total + d.duration, 0);
+    
+    // Calculate uptime percentage
+    const totalTimeRange = effectiveTimeRange.end - effectiveTimeRange.start;
+    const uptimePercentage = ((totalTimeRange - totalDowntimeDuration) / totalTimeRange) * 100;
+    
+    // Prepare CSV data
+    const csvData = [
+      [`downtime event count: ${filteredDowntimes.length}`],
+      [`unplanned downtime: ${formatDurationDetailed(unplannedDowntimeDuration)}`],
+      [`total downtime: ${formatDurationDetailed(totalDowntimeDuration)}`],
+      [`uptime percentage: ${uptimePercentage.toFixed(2)}%`],
+      [''], // Empty line
+      ['target', 'start time', 'end time', 'duration', 'type'],
+      ['---', '---', '---', '---', '---'],
+      ...filteredDowntimes.map(downtime => [
+        downtime.target,
+        formatDate(downtime.start),
+        formatDate(downtime.end),
+        formatDurationDetailed(downtime.duration),
+        downtime.annotation?.type || 'unplanned'
+      ])
+    ];
+    
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const targetName = isGroup ? `${targets.length}_targets` : target;
+    a.download = `downtime_report_${targetName}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const isGroup = targets && targets.length > 0;
 
   return (
@@ -252,6 +289,20 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+
+            {/* Generate Report Button */}
+            {filteredDowntimes.length > 0 && (
+              <div className="flex justify-center mt-6">
+                <Button 
+                  onClick={generateReport} 
+                  variant="default" 
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
               </div>
             )}
           </>

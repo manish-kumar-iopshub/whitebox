@@ -189,8 +189,8 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md mx-auto shadow-sm border border-gray-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl text-gray-900">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl text-gray-900">
               <span role="img" aria-label="search">🔍</span> Loading...
             </CardTitle>
           </CardHeader>

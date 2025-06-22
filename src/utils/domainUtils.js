@@ -23,19 +23,35 @@ export const formatDate = (date) => {
 export const formatDateForInput = (date) => {
   if (!date) return '';
   
-  const kolkataDate = convertToKolkataTime(date);
-  return format(kolkataDate, "yyyy-MM-dd'T'HH:mm");
+  // Create a new date object in IST timezone
+  const istDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  
+  // Format as YYYY-MM-DDTHH:mm for datetime-local input
+  const year = istDate.getFullYear();
+  const month = String(istDate.getMonth() + 1).padStart(2, '0');
+  const day = String(istDate.getDate()).padStart(2, '0');
+  const hours = String(istDate.getHours()).padStart(2, '0');
+  const minutes = String(istDate.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-// Parse datetime-local input to UTC Date
+// Parse datetime-local input to UTC Date (treating input as IST)
 export const parseDateFromInput = (dateString) => {
   if (!dateString) return new Date();
   
-  // Create date in local timezone (Asia/Kolkata)
-  const localDate = new Date(dateString);
+  // Parse the datetime-local input as IST time
+  const [datePart, timePart] = dateString.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
   
-  // Convert to UTC for API calls
-  const utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
+  // Create date in IST timezone
+  const istDate = new Date(year, month - 1, day, hours, minutes);
+  
+  // Convert IST to UTC for API calls
+  // IST is UTC+5:30, so we subtract 5 hours and 30 minutes
+  const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+  
   return utcDate;
 };
 

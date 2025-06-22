@@ -72,8 +72,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
           end: period.end,
           duration: period.duration * 60 * 1000,
           annotation: {
-            type: 'unplanned',
-            notes: ''
+            type: 'unplanned'
           }
         }));
         
@@ -100,10 +99,20 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
     fetchDowntimes();
   }, [target, targets, effectiveTimeRange, onDebugInfo]);
 
-  const handleAnnotationChange = (downtimeId, annotation) => {
-    setDowntimes(prev => prev.map(d => 
-      d.id === downtimeId ? { ...d, annotation } : d
-    ));
+  const handleTypeToggle = (downtimeId) => {
+    setDowntimes(prev => prev.map(d => {
+      if (d.id === downtimeId) {
+        const newType = d.annotation?.type === 'planned' ? 'unplanned' : 'planned';
+        return {
+          ...d,
+          annotation: {
+            ...d.annotation,
+            type: newType
+          }
+        };
+      }
+      return d;
+    }));
   };
 
   // Filter downtimes based on type and duration threshold
@@ -114,8 +123,12 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
     return matchesType && meetsDurationThreshold;
   });
 
-  const totalDowntimeDuration = filteredDowntimes.reduce((total, d) => total + d.duration, 0);
-  const totalUptimeDuration = (effectiveTimeRange.end - effectiveTimeRange.start) - totalDowntimeDuration;
+  // Calculate uptime excluding planned downtimes
+  const unplannedDowntimeDuration = filteredDowntimes
+    .filter(d => d.annotation?.type === 'unplanned')
+    .reduce((total, d) => total + d.duration, 0);
+  
+  const totalUptimeDuration = (effectiveTimeRange.end - effectiveTimeRange.start) - unplannedDowntimeDuration;
   const uptimePercentage = ((totalUptimeDuration / (effectiveTimeRange.end - effectiveTimeRange.start)) * 100);
 
   const formatDurationDetailed = (ms) => {
@@ -142,7 +155,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Filter Controls */}
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-wrap gap-4 items-end">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Filter Type</label>
             <Select value={filterType} onValueChange={setFilterType}>
@@ -192,12 +205,12 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
                 <div className="text-sm text-gray-600">Downtime Events</div>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-2xl font-bold text-red-600">{formatDurationDetailed(totalDowntimeDuration)}</div>
-                <div className="text-sm text-gray-600">Total Downtime</div>
+                <div className="text-2xl font-bold text-red-600">{formatDurationDetailed(unplannedDowntimeDuration)}</div>
+                <div className="text-sm text-gray-600">Unplanned Downtime</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-2xl font-bold text-green-600">{uptimePercentage.toFixed(2)}%</div>
-                <div className="text-sm text-gray-600">Uptime</div>
+                <div className="text-sm text-gray-600">Uptime (Excluding Planned)</div>
               </div>
             </div>
 
@@ -215,8 +228,7 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
                       <TableHead className="text-gray-700">Start Time</TableHead>
                       <TableHead className="text-gray-700">End Time</TableHead>
                       <TableHead className="text-gray-700">Duration</TableHead>
-                      <TableHead className="text-gray-700">Type</TableHead>
-                      <TableHead className="text-gray-700">Notes</TableHead>
+                      <TableHead className="text-gray-700 w-32">Type</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -226,22 +238,15 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
                         <TableCell className="text-gray-600">{formatDate(downtime.start)}</TableCell>
                         <TableCell className="text-gray-600">{formatDate(downtime.end)}</TableCell>
                         <TableCell className="text-gray-600 font-mono">{formatDurationDetailed(downtime.duration)}</TableCell>
-                        <TableCell>
-                          <Badge variant={downtime.annotation?.type === 'planned' ? 'default' : 'destructive'}>
+                        <TableCell className="w-32">
+                          <Button
+                            variant={downtime.annotation?.type === 'planned' ? 'default' : 'destructive'}
+                            size="sm"
+                            onClick={() => handleTypeToggle(downtime.id)}
+                            className="cursor-pointer w-full"
+                          >
                             {downtime.annotation?.type || 'unplanned'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="text"
-                            value={downtime.annotation?.notes || ''}
-                            onChange={(e) => handleAnnotationChange(downtime.id, {
-                              ...downtime.annotation,
-                              notes: e.target.value
-                            })}
-                            placeholder="Add notes..."
-                            className="w-full text-sm"
-                          />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Calendar, Clock, ChevronRight } from 'lucide-react';
+import { DatePicker } from './ui/date-picker';
+import { format } from 'date-fns';
 
 const TimeRangePicker = ({ 
   onTimeRangeChange, 
@@ -30,16 +32,46 @@ const TimeRangePicker = ({
     }
   }, [initialStart, initialEnd]);
 
-  const handleStartDateChange = (dateString) => {
-    const newStartDate = parseDateFromInput(dateString);
-    setPendingStartDate(newStartDate);
+  const handleStartDateChange = (date) => {
+    if (date) {
+      // Preserve the time from the current pending start date
+      const currentTime = pendingStartDate;
+      const newDate = new Date(date);
+      newDate.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+      
+      setPendingStartDate(newDate);
+      setSelectedPreset('');
+      setHasChanges(true);
+    }
+  };
+
+  const handleEndDateChange = (date) => {
+    if (date) {
+      // Preserve the time from the current pending end date
+      const currentTime = pendingEndDate;
+      const newDate = new Date(date);
+      newDate.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+      
+      setPendingEndDate(newDate);
+      setSelectedPreset('');
+      setHasChanges(true);
+    }
+  };
+
+  const handleStartTimeChange = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const newDate = new Date(pendingStartDate);
+    newDate.setHours(hours, minutes, 0, 0);
+    setPendingStartDate(newDate);
     setSelectedPreset('');
     setHasChanges(true);
   };
 
-  const handleEndDateChange = (dateString) => {
-    const newEndDate = parseDateFromInput(dateString);
-    setPendingEndDate(newEndDate);
+  const handleEndTimeChange = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const newDate = new Date(pendingEndDate);
+    newDate.setHours(hours, minutes, 0, 0);
+    setPendingEndDate(newDate);
     setSelectedPreset('');
     setHasChanges(true);
   };
@@ -79,7 +111,8 @@ const TimeRangePicker = ({
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      timeZone: 'Asia/Kolkata'
     });
   };
 
@@ -87,7 +120,8 @@ const TimeRangePicker = ({
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      timeZone: 'Asia/Kolkata'
     });
   };
 
@@ -106,6 +140,13 @@ const TimeRangePicker = ({
     }
   };
 
+  const formatTimeForInput = (date) => {
+    const istDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const hours = String(istDate.getHours()).padStart(2, '0');
+    const minutes = String(istDate.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   return (
     <Card className="mb-6 shadow-sm border border-gray-200">
       <CardHeader className="pb-4">
@@ -116,7 +157,7 @@ const TimeRangePicker = ({
           </div>
           {showTimezone && (
             <Badge variant="outline" className="text-xs">
-              {getCurrentTimezone()}
+              IST (Asia/Kolkata)
             </Badge>
           )}
         </div>
@@ -163,20 +204,32 @@ const TimeRangePicker = ({
           <label className="text-sm font-medium text-gray-700">Custom Range</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs text-gray-600">Start Date & Time</label>
+              <label className="text-xs text-gray-600">Start Date</label>
+              <DatePicker
+                date={pendingStartDate}
+                onDateChange={handleStartDateChange}
+                placeholder="Select start date"
+              />
+              <label className="text-xs text-gray-600">Start Time</label>
               <Input
-                type="datetime-local"
-                value={formatDateForInput(pendingStartDate)}
-                onChange={(e) => handleStartDateChange(e.target.value)}
+                type="time"
+                value={formatTimeForInput(pendingStartDate)}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
                 className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs text-gray-600">End Date & Time</label>
+              <label className="text-xs text-gray-600">End Date</label>
+              <DatePicker
+                date={pendingEndDate}
+                onDateChange={handleEndDateChange}
+                placeholder="Select end date"
+              />
+              <label className="text-xs text-gray-600">End Time</label>
               <Input
-                type="datetime-local"
-                value={formatDateForInput(pendingEndDate)}
-                onChange={(e) => handleEndDateChange(e.target.value)}
+                type="time"
+                value={formatTimeForInput(pendingEndDate)}
+                onChange={(e) => handleEndTimeChange(e.target.value)}
                 className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
               />
             </div>

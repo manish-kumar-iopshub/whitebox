@@ -46,17 +46,14 @@ const createDayBasedChunks = (startTime, endTime) => {
   const startDate = new Date(startTime * 1000);
   const endDate = new Date(endTime * 1000);
   
-  // If duration is less than 24 hours, return single chunk
-  const durationHours = (endTime - startTime) / 3600;
-  if (durationHours <= 24) {
-    return [{ start: startTime, end: endTime }];
-  }
+  // Always create at least 2 chunks, splitting at day boundaries
+  // Even for single day ranges, split at midnight
   
   let currentStart = startTime;
+  let currentDate = new Date(startDate);
   
   while (currentStart < endTime) {
     // Calculate the end of the current day (00:00:00 of next day)
-    const currentDate = new Date(currentStart * 1000);
     const nextDay = new Date(currentDate);
     nextDay.setDate(nextDay.getDate() + 1);
     nextDay.setHours(0, 0, 0, 0);
@@ -68,6 +65,7 @@ const createDayBasedChunks = (startTime, endTime) => {
     
     // Move to next day
     currentStart = chunkEnd;
+    currentDate = nextDay;
   }
   
   return chunks;
@@ -434,43 +432,85 @@ export const getGroupDowntimePeriods = async (targets, start, end, onProgress = 
     console.log(`Created ${chunks.length} day-based chunks for group`);
     
     let allDowntimePeriods = [];
+    let totalCalls = targets.length * chunks.length;
+    let completedCalls = 0;
     
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const chunkStartDate = new Date(chunk.start * 1000);
-      const chunkEndDate = new Date(chunk.end * 1000);
+    // Process each target separately to avoid chunk boundary issues
+    for (const target of targets) {
+      console.log(`Processing target: ${target}`);
+      let targetDowntimes = [];
       
-      console.log(`Processing group chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toISOString()} to ${chunkEndDate.toISOString()}`);
-      
-      // Report progress
-      if (onProgress) {
-        onProgress(i + 1, chunks.length, `Fetching group chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toLocaleDateString()} ${chunkStartDate.toLocaleTimeString()} - ${chunkEndDate.toLocaleTimeString()}`);
-      }
-      
-      try {
-        // Get all probe_success data for all targets in the group
-        const targetQueries = targets.map(target => `probe_success{instance="${target}"}`).join(' or ');
-        const response = await prometheusApi.get('/api/v1/query_range', {
-          params: {
-            query: targetQueries,
-            start: chunk.start,
-            end: chunk.end,
-            step: step,
-          },
-          timeout: 90000, // 90 second timeout for group queries
-        });
-
-        const chunkDowntimes = processGroupDowntimeDataAccurate(response.data.data.result, chunk.start, chunk.end, targets);
-        allDowntimePeriods = allDowntimePeriods.concat(chunkDowntimes);
+      // Prepare all API calls for this target
+      const targetPromises = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const chunkStartDate = new Date(chunk.start * 1000);
+        const chunkEndDate = new Date(chunk.end * 1000);
         
-        console.log(`Group chunk ${i + 1} completed, found ${chunkDowntimes.length} downtime periods`);
-      } catch (chunkError) {
-        console.error(`Failed to fetch group chunk ${i + 1}:`, chunkError);
-        // Don't continue if a chunk fails - we need complete data for consistency
-        throw chunkError;
+        targetPromises.push(
+          (async () => {
+            if (onProgress) {
+              onProgress(
+                ++completedCalls,
+                totalCalls,
+                `Fetching [${target}] chunk ${i + 1}/${chunks.length}: ${chunkStartDate.toLocaleDateString()} ${chunkStartDate.toLocaleTimeString()} - ${chunkEndDate.toLocaleTimeString()}`,
+                {
+                  target,
+                  start: chunk.start,
+                  end: chunk.end,
+                  message: `Fetching [${target}] chunk ${i + 1}/${chunks.length}`
+                }
+              );
+            }
+            try {
+              const response = await prometheusApi.get('/api/v1/query_range', {
+                params: {
+                  query: `probe_success{instance="${target}"}`,
+                  start: chunk.start,
+                  end: chunk.end,
+                  step: step,
+                },
+                timeout: 60000,
+              });
+              return {
+                chunkIndex: i,
+                values: response.data.data.result[0]?.values || [],
+                chunkStart: chunk.start,
+                chunkEnd: chunk.end
+              };
+            } catch (chunkError) {
+              console.error(`Failed to fetch [${target}] chunk ${i + 1}:`, chunkError);
+              return {
+                chunkIndex: i,
+                values: [],
+                chunkStart: chunk.start,
+                chunkEnd: chunk.end
+              };
+            }
+          })()
+        );
       }
+      
+      // Wait for all chunks for this target to complete
+      const targetResults = await Promise.all(targetPromises);
+      
+      // Sort results by chunk index to maintain chronological order
+      targetResults.sort((a, b) => a.chunkIndex - b.chunkIndex);
+      
+      // Merge all data points for this target across all chunks
+      const allValues = [];
+      for (const result of targetResults) {
+        allValues.push(...result.values);
+      }
+      
+      // Process the merged data for this target
+      const targetDowntimePeriods = processDowntimeDataAccurate(allValues, startTime, endTime)
+        .map(period => ({ ...period, target }));
+      
+      allDowntimePeriods.push(...targetDowntimePeriods);
+      console.log(`Target ${target}: Found ${targetDowntimePeriods.length} downtime periods`);
     }
-
+    
     console.log(`Total group downtime periods found: ${allDowntimePeriods.length}`);
     
     // Ensure no duplicates and consistent ordering
@@ -479,7 +519,7 @@ export const getGroupDowntimePeriods = async (targets, start, end, onProgress = 
     
     // Report completion
     if (onProgress) {
-      onProgress(chunks.length, chunks.length, `Completed: Found ${uniqueDowntimes.length} group downtime periods`);
+      onProgress(totalCalls, totalCalls, `Completed: Found ${uniqueDowntimes.length} group downtime periods`);
     }
     
     // Sort by start time (most recent first)

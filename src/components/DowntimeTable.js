@@ -15,6 +15,11 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const effectiveTimeRange = timeRange || (() => {
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    // Normalize timestamps to have 00 seconds to eliminate variability
+    now.setSeconds(0, 0);
+    twentyFourHoursAgo.setSeconds(0, 0);
+    
     return {
       start: twentyFourHoursAgo,
       end: now

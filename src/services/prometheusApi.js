@@ -33,10 +33,19 @@ prometheusApi.interceptors.response.use(
   }
 );
 
-// Helper function to format time range
+// Helper function to format time range with normalized seconds
 const formatTimeRange = (start, end) => {
-  const startTime = Math.floor(new Date(start).getTime() / 1000);
-  const endTime = Math.floor(new Date(end).getTime() / 1000);
+  // Normalize timestamps to have 00 seconds to eliminate variability
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  // Set seconds to 00 and milliseconds to 000
+  startDate.setSeconds(0, 0);
+  endDate.setSeconds(0, 0);
+  
+  const startTime = Math.floor(startDate.getTime() / 1000);
+  const endTime = Math.floor(endDate.getTime() / 1000);
+  
   return { start: startTime, end: endTime };
 };
 

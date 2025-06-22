@@ -185,4 +185,17 @@ export const getTimeRangeFromPreset = (preset) => {
   const now = new Date();
   const start = new Date(now.getTime() - (preset.hours * 60 * 60 * 1000));
   return { start, end: now };
+};
+
+// Find which group a target belongs to
+export const findTargetGroup = (target, domainGroups) => {
+  if (!domainGroups || !target) return null;
+  
+  for (const [groupName, domains] of Object.entries(domainGroups)) {
+    if (domains.includes(target)) {
+      return groupName;
+    }
+  }
+  
+  return null;
 }; 

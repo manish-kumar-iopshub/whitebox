@@ -8,12 +8,15 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Search } from 'lucide-react';
 
 const DomainGrouping = ({ 
   targets, 
   onGroupChange, 
   targetStatuses = [],
-  onGroupClick 
+  onGroupClick,
+  filteredGroups,
+  searchQuery
 }) => {
   const [customGroups, setCustomGroups] = useState([]);
   const [showCustomForm, setShowCustomForm] = useState(false);
@@ -64,14 +67,15 @@ const DomainGrouping = ({
     }
   };
 
+  // Filter custom groups based on search query
+  const filteredCustomGroups = searchQuery 
+    ? customGroups.filter(group => 
+        group.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : customGroups;
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 m-0">Domain Groups</h3>
-        <Button onClick={() => setShowCustomForm(!showCustomForm)} variant="default">
-          {showCustomForm ? 'Cancel' : '+ Add Custom Group'}
-        </Button>
-      </div>
       {showCustomForm && (
         <Card className="mb-6 shadow-sm border border-gray-200">
           <CardHeader>
@@ -115,11 +119,11 @@ const DomainGrouping = ({
           </CardContent>
         </Card>
       )}
-      {customGroups.length > 0 && (
+      {filteredCustomGroups.length > 0 && (
         <div className="mb-6">
           <h4 className="mb-2 text-blue-600 text-base font-semibold">Custom Groups</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {customGroups.map(group => (
+            {filteredCustomGroups.map(group => (
               <Card key={group.name} className="bg-blue-50 border border-blue-200 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="truncate text-base font-semibold text-gray-900">{group.name}</CardTitle>
@@ -135,11 +139,10 @@ const DomainGrouping = ({
           </div>
         </div>
       )}
-      {Object.keys(domainGroups).length > 0 && (
+      {Object.keys(filteredGroups || {}).length > 0 && (
         <div>
-          <h4 className="mb-4 text-blue-600 text-base font-semibold">Groups Overview</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(domainGroups).map(([groupName, domains]) => {
+            {Object.entries(filteredGroups).map(([groupName, domains]) => {
               const groupTargets = targetStatuses.filter(t => domains.includes(t.target));
               const groupUptime = calculateGroupUptime(groupTargets.map(t => t.uptime || 0));
               return (
@@ -163,6 +166,16 @@ const DomainGrouping = ({
               );
             })}
           </div>
+        </div>
+      )}
+      
+      {/* Empty state when no groups match search */}
+      {searchQuery && 
+       filteredCustomGroups.length === 0 && 
+       Object.keys(filteredGroups || {}).length === 0 && (
+        <div className="text-center py-12">
+          <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500">No groups found matching "{searchQuery}"</p>
         </div>
       )}
     </div>

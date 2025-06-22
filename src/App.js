@@ -73,14 +73,14 @@ function App() {
   const targetStatusesRef = useRef([]);
   const [timeRange, setTimeRange] = useState(() => {
     const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000); // 2 days instead of 24 hours
     
     // Normalize timestamps to have 00 seconds to eliminate variability
     now.setSeconds(0, 0);
-    twentyFourHoursAgo.setSeconds(0, 0);
+    twoDaysAgo.setSeconds(0, 0);
     
     return {
-      start: twentyFourHoursAgo,
+      start: twoDaysAgo,
       end: now
     };
   });
@@ -242,6 +242,7 @@ function App() {
               targetStatuses={targetStatuses}
               timeRange={timeRange}
               onTimeRangeChange={handleTimeRangeChange}
+              domainGroups={domainGroups}
             />
           } />
           <Route path="/targets/:targetId" element={

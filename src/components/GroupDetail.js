@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { formatDate } from '../utils/domainUtils';
 import { getTargetStatus, getUptimePercentage } from '../services/prometheusApi';
 import TimeRangePicker from './TimeRangePicker';
-import UptimeChart from './UptimeChart';
-import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
 import DebugInfo from './DebugInfo';
 import { Card, CardContent } from './ui/card';
@@ -113,30 +111,18 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
     window.URL.revokeObjectURL(url);
   };
 
-  const upCount = Object.values(targetStatuses).filter(status => status?.status === 'up').length;
-  const downCount = Object.values(targetStatuses).filter(status => status?.status === 'down').length;
-
-  // Calculate group uptime as average of individual uptimes
-  const groupUptime = (() => {
-    const validUptimes = Object.values(targetUptimes).filter(uptime => uptime !== null && uptime !== undefined);
-    if (validUptimes.length === 0) return 100;
-    
-    const avgUptime = validUptimes.reduce((sum, uptime) => sum + uptime, 0) / validUptimes.length;
-    return avgUptime;
-  })();
-
   if (loading) {
     return (
       <div className="text-center p-10">
         <div className="text-2xl mb-2">⏳</div>
-        <p className="text-muted-foreground">Loading group data...</p>
+        <p className="text-gray-600">Loading group data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6 border border-destructive/20">
+      <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-200">
         <strong>Error:</strong> {error}
       </div>
     );
@@ -149,12 +135,12 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
           <Button
             onClick={onBack}
             variant="ghost"
-            className="mb-2 flex items-center gap-2 text-discord-blurple"
+            className="mb-2 flex items-center gap-2 text-blue-600 hover:text-blue-700"
           >
             ← Back to Groups
           </Button>
-          <h1 className="m-0 text-2xl font-bold text-discord-blurple">{groupName}</h1>
-          <p className="mt-1 mb-0 text-muted-foreground">{targets.length} target{targets.length !== 1 ? 's' : ''}</p>
+          <h1 className="m-0 text-2xl font-bold text-gray-900">{groupName}</h1>
+          <p className="mt-1 mb-0 text-gray-600">{targets.length} target{targets.length !== 1 ? 's' : ''}</p>
         </div>
         <Button onClick={handleExport} variant="default" className="flex items-center gap-2">
           📊 Export CSV
@@ -168,47 +154,6 @@ const GroupDetail = ({ groupName, targets, targetStatuses: passedTargetStatuses,
         initialEnd={timeRange.end}
         timezone="Asia/Kolkata"
       />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <div className="text-3xl mb-2">📊</div>
-            <div className="text-2xl font-bold text-discord-blurple">{groupUptime.toFixed(2)}%</div>
-            <div className="text-sm text-muted-foreground">Group Uptime</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <div className="text-3xl mb-2">✅</div>
-            <div className="text-2xl font-bold text-discord-green">{upCount}</div>
-            <div className="text-sm text-muted-foreground">Targets Up</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <div className="text-3xl mb-2">❌</div>
-            <div className="text-2xl font-bold text-discord-red">{downCount}</div>
-            <div className="text-sm text-muted-foreground">Targets Down</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="text-center">
-          <CardContent className="pt-6">
-            <div className="text-3xl mb-2">📈</div>
-            <div className="text-2xl font-bold text-discord-yellow">{targets.length}</div>
-            <div className="text-sm text-muted-foreground">Total Targets</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts and DowntimeTable use the same timeRange */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <UptimeChart targets={targets} timeRange={timeRange} />
-        <ResponseTimeChart targets={targets} timeRange={timeRange} />
-      </div>
 
       <DowntimeTable targets={targets} timeRange={timeRange} onDebugInfo={setDebugInfo} />
 

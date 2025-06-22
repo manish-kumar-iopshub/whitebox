@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { getTargetStatus, getTargetUptime } from '../services/prometheusApi';
 import { formatDate } from '../utils/domainUtils';
 import TimeRangePicker from './TimeRangePicker';
-import UptimeChart from './UptimeChart';
-import ResponseTimeChart from './ResponseTimeChart';
 import DowntimeTable from './DowntimeTable';
 import DebugInfo from './DebugInfo';
 import { Card, CardContent } from './ui/card';
@@ -101,7 +99,7 @@ const TargetDetail = ({ target, onBack }) => {
         initialEnd={timeRange.end}
         timezone="Asia/Kolkata"
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card className="text-center shadow-sm border border-gray-200">
           <CardContent className="pt-6">
             <div className="text-3xl mb-2">📊</div>
@@ -127,19 +125,6 @@ const TargetDetail = ({ target, onBack }) => {
             <div className="text-sm text-gray-600">Last Check</div>
           </CardContent>
         </Card>
-        <Card className="text-center shadow-sm border border-gray-200">
-          <CardContent className="pt-6">
-            <div className="text-3xl mb-2">📈</div>
-            <div className="text-2xl font-bold text-green-600">
-              {status?.status === 'up' ? '100%' : '0%'}
-            </div>
-            <div className="text-sm text-gray-600">Current Status</div>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <UptimeChart target={target} timeRange={timeRange} />
-        <ResponseTimeChart target={target} timeRange={timeRange} />
       </div>
       <DowntimeTable target={target} timeRange={timeRange} onDebugInfo={setDebugInfo} />
       <DebugInfo debugInfo={debugInfo} />

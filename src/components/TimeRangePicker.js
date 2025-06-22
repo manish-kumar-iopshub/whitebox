@@ -3,6 +3,9 @@ import { TIME_RANGE_PRESETS, formatDateForInput, parseDateFromInput } from '../u
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Badge } from './ui/badge';
+import { Calendar, Clock, ChevronRight } from 'lucide-react';
 
 const TimeRangePicker = ({ 
   onTimeRangeChange, 
@@ -70,63 +73,127 @@ const TimeRangePicker = ({
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   };
 
+  const formatDateForDisplay = (date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const formatTimeForDisplay = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const getDurationText = (start, end) => {
+    const diffMs = end - start;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+    } else {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
+    }
+  };
+
   return (
     <Card className="mb-6 shadow-sm border border-gray-200">
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4 mb-2">
-        <CardTitle className="text-lg text-gray-900">Time Range</CardTitle>
-        {showTimezone && (
-          <div className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-md border border-gray-200">Timezone: {getCurrentTimezone()}</div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {showPresets && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {TIME_RANGE_PRESETS.map(preset => (
-              <Button
-                key={preset.value}
-                variant={selectedPreset === preset.value ? 'default' : 'secondary'}
-                onClick={() => handlePresetClick(preset)}
-                size="sm"
-              >
-                {preset.label}
-              </Button>
-            ))}
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-gray-600" />
+            <CardTitle className="text-lg text-gray-900">Time Range</CardTitle>
           </div>
-        )}
-        <div className="flex flex-wrap gap-4 items-end mb-4">
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">Start Date & Time</label>
-            <Input
-              type="datetime-local"
-              value={formatDateForInput(pendingStartDate)}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-              className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
-              minWidth={200}
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700">End Date & Time</label>
-            <Input
-              type="datetime-local"
-              value={formatDateForInput(pendingEndDate)}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-              className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
-              minWidth={200}
-            />
-          </div>
-          <div className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-md border border-gray-200 min-w-[150px]">
-            <div className="font-medium mb-1">{hasChanges ? 'Pending Range:' : 'Current Range:'}</div>
-            <div>{formatDateForInput(pendingStartDate)}</div>
-            <div>to</div>
-            <div>{formatDateForInput(pendingEndDate)}</div>
-          </div>
-          {hasChanges && (
-            <div className="flex gap-2 items-end">
-              <Button onClick={handleApplyChanges} variant="default" size="sm">Apply Changes</Button>
-              <Button onClick={handleCancelChanges} variant="secondary" size="sm">Cancel</Button>
-            </div>
+          {showTimezone && (
+            <Badge variant="outline" className="text-xs">
+              {getCurrentTimezone()}
+            </Badge>
           )}
         </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Selected Range Display */}
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">Selected Range:</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>{formatDateForDisplay(pendingStartDate)}</span>
+            <ChevronRight className="h-4 w-4" />
+            <span>{formatDateForDisplay(pendingEndDate)}</span>
+            <Badge variant="secondary" className="ml-2">
+              {getDurationText(pendingStartDate, pendingEndDate)}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Preset Buttons */}
+        {showPresets && (
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">Quick Presets</label>
+            <div className="flex flex-wrap gap-2">
+              {TIME_RANGE_PRESETS.map(preset => (
+                <Button
+                  key={preset.value}
+                  variant={selectedPreset === preset.value ? 'default' : 'outline'}
+                  onClick={() => handlePresetClick(preset)}
+                  size="sm"
+                  className="text-xs"
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Custom Date/Time Inputs */}
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-gray-700">Custom Range</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">Start Date & Time</label>
+              <Input
+                type="datetime-local"
+                value={formatDateForInput(pendingStartDate)}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">End Date & Time</label>
+              <Input
+                type="datetime-local"
+                value={formatDateForInput(pendingEndDate)}
+                onChange={(e) => handleEndDateChange(e.target.value)}
+                className={hasChanges ? 'border-blue-500 ring-2 ring-blue-200' : ''}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        {hasChanges && (
+          <div className="flex gap-2 pt-2">
+            <Button onClick={handleApplyChanges} variant="default" size="sm">
+              Apply Changes
+            </Button>
+            <Button onClick={handleCancelChanges} variant="outline" size="sm">
+              Cancel
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

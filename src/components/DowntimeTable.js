@@ -5,6 +5,9 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from './ui/table';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { AlertTriangle, Clock, Activity } from 'lucide-react';
 
 const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const [downtimes, setDowntimes] = useState([]);
@@ -130,14 +133,18 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
   const isGroup = targets && targets.length > 0;
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 shadow-sm border border-gray-200">
       <CardHeader>
-        <CardTitle>Downtime History for {isGroup ? `${targets.length} targets` : target}</CardTitle>
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-gray-600" />
+          <CardTitle className="text-gray-900">Downtime History for {isGroup ? `${targets.length} targets` : target}</CardTitle>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-4 mb-6 items-center">
-          <div>
-            <label className="block mb-1 text-sm font-medium">Filter Type</label>
+      <CardContent className="space-y-6">
+        {/* Filter Controls */}
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Filter Type</label>
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -149,15 +156,15 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2 p-2 bg-muted rounded-md border">
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
             <input
               type="checkbox"
               id="excludeShortDowntimes"
               checked={excludeShortDowntimes}
               onChange={(e) => setExcludeShortDowntimes(e.target.checked)}
-              className="accent-discord-blurple"
+              className="accent-blue-600"
             />
-            <label htmlFor="excludeShortDowntimes" className="text-sm cursor-pointer">
+            <label htmlFor="excludeShortDowntimes" className="text-sm text-gray-700 cursor-pointer">
               Exclude downtimes ≤ 2 minutes
             </label>
           </div>
@@ -165,78 +172,82 @@ const DowntimeTable = ({ target, timeRange, targets, onDebugInfo }) => {
 
         {loading && (
           <div className="text-center py-8">
-            <div className="text-lg mb-2">⏳</div>
-            <p className="text-muted-foreground">{loadingProgress || 'Loading downtime data...'}</p>
+            <div className="text-2xl mb-2">⏳</div>
+            <p className="text-gray-600">{loadingProgress || 'Loading downtime data...'}</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4 border border-destructive/20">
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {!loading && !error && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-discord-blurple">{filteredDowntimes.length}</div>
-                <div className="text-sm text-muted-foreground">Downtime Events</div>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-2xl font-bold text-blue-600">{filteredDowntimes.length}</div>
+                <div className="text-sm text-gray-600">Downtime Events</div>
               </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-discord-red">{formatDurationDetailed(totalDowntimeDuration)}</div>
-                <div className="text-sm text-muted-foreground">Total Downtime</div>
+              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-2xl font-bold text-red-600">{formatDurationDetailed(totalDowntimeDuration)}</div>
+                <div className="text-sm text-gray-600">Total Downtime</div>
               </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-discord-green">{uptimePercentage.toFixed(2)}%</div>
-                <div className="text-sm text-muted-foreground">Uptime</div>
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-2xl font-bold text-green-600">{uptimePercentage.toFixed(2)}%</div>
+                <div className="text-sm text-gray-600">Uptime</div>
               </div>
             </div>
 
             {filteredDowntimes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No downtime events found for the selected criteria.
+              <div className="text-center py-8 text-gray-500">
+                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No downtime events found for the selected criteria.</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Start Time</TableHead>
-                    <TableHead>End Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDowntimes.map((downtime) => (
-                    <TableRow key={downtime.id}>
-                      <TableCell className="font-medium">{downtime.target}</TableCell>
-                      <TableCell>{formatDate(downtime.start)}</TableCell>
-                      <TableCell>{formatDate(downtime.end)}</TableCell>
-                      <TableCell>{formatDurationDetailed(downtime.duration)}</TableCell>
-                      <TableCell>
-                        <Badge variant={downtime.annotation?.type === 'planned' ? 'default' : 'destructive'}>
-                          {downtime.annotation?.type || 'unplanned'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={downtime.annotation?.notes || ''}
-                          onChange={(e) => handleAnnotationChange(downtime.id, {
-                            ...downtime.annotation,
-                            notes: e.target.value
-                          })}
-                          placeholder="Add notes..."
-                          className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-discord-blurple"
-                        />
-                      </TableCell>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="text-gray-700">Target</TableHead>
+                      <TableHead className="text-gray-700">Start Time</TableHead>
+                      <TableHead className="text-gray-700">End Time</TableHead>
+                      <TableHead className="text-gray-700">Duration</TableHead>
+                      <TableHead className="text-gray-700">Type</TableHead>
+                      <TableHead className="text-gray-700">Notes</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDowntimes.map((downtime) => (
+                      <TableRow key={downtime.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium text-gray-900">{downtime.target}</TableCell>
+                        <TableCell className="text-gray-600">{formatDate(downtime.start)}</TableCell>
+                        <TableCell className="text-gray-600">{formatDate(downtime.end)}</TableCell>
+                        <TableCell className="text-gray-600 font-mono">{formatDurationDetailed(downtime.duration)}</TableCell>
+                        <TableCell>
+                          <Badge variant={downtime.annotation?.type === 'planned' ? 'default' : 'destructive'}>
+                            {downtime.annotation?.type || 'unplanned'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={downtime.annotation?.notes || ''}
+                            onChange={(e) => handleAnnotationChange(downtime.id, {
+                              ...downtime.annotation,
+                              notes: e.target.value
+                            })}
+                            placeholder="Add notes..."
+                            className="w-full text-sm"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </>
         )}
